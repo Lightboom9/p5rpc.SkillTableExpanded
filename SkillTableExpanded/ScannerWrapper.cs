@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Project.Utils;
 using Reloaded.Hooks.Definitions;
+using Reloaded.Memory.Sigscan;
 using IReloadedHooks = Reloaded.Hooks.Definitions.IReloadedHooks;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
 
@@ -151,6 +152,51 @@ public class ScannerWrapper
             Log.Information($"{name} found at: {address:X}");
             
             callback(address);
+        });
+    }
+
+    public void ScanMany(string name, string pattern, int count, Action<nint[]> callback)
+    {
+        if (count < 1)
+        {
+            throw new ArgumentException();
+        }
+
+        if (count == 1)
+        {
+            Scan(name, pattern, address => callback([address]));
+        }
+        
+        _scanner.AddMainModuleScan(pattern, result =>
+        {
+            if (!result.Found)
+            {
+                Log.Error($"Failed to find pattern for {name}. Pattern: {pattern}");
+                
+                return;
+            }
+
+            var addresses = new nint[count];
+
+            var address = BaseAddress + result.Offset;
+            addresses[0] = address;
+            
+            Log.Information($"{name} (1) found at: {address:X}");
+            
+            using var thisProcess = Process.GetCurrentProcess();
+            using var scanner = new Scanner(thisProcess, thisProcess.MainModule);
+            var memoryOffset = pattern.Replace(" ", "").Length / 2;
+
+            for (var i = 1; i < count; i++)
+            {
+                result = scanner.FindPattern(pattern, result.Offset + memoryOffset);
+                address = BaseAddress + result.Offset;
+                addresses[i] = address;
+                
+                Log.Information($"{name} ({i + 1}) found at: {address:X}");
+            }
+
+            callback(addresses);
         });
     }
 }

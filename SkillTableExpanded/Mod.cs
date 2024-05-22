@@ -1,5 +1,5 @@
-﻿using System.Drawing;
-using System.Text;
+﻿using System.Diagnostics;
+using System.Drawing;
 using Reloaded.Memory.SigScan.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
 using SkillTableExpanded.Template;
@@ -8,6 +8,7 @@ using Project.Utils;
 using Reloaded.Hooks.Definitions.X64;
 using Reloaded.Hooks.Definitions;
 using Reloaded.Hooks.Definitions.Enums;
+using Reloaded.Memory.Sigscan;
 using Reloaded.Memory.Utilities;
 using IReloadedHooks = Reloaded.Hooks.Definitions.IReloadedHooks;
 
@@ -54,14 +55,9 @@ public class Mod : ModBase // <= Do not Remove.
     private unsafe delegate long FUN_140e39b70(long param1);
     private IHook<FUN_140e39b70>? FUN_140e39b70_Hook;
     
-    [Function(CallingConventions.Microsoft)]
-    private unsafe delegate void FUN_140e3dc90(uint* param1);
-    private IHook<FUN_140e3dc90>? FUN_140e3dc90_Hook;
-    
     private nint _DAT_142226bf0_Address; // Starting address of SKILL.TBL in memory
 
     // For DAT_142226bf0
-    // 140e3dced, 140e3dde0 and 140e3dde5 are skipped as they seem to be related to loading the table and writing data
     private nint _LEA_140105ab5_Address;
     private nint _TEST_140719e12_Address;
     private nint _LEA_14071bd02_Address;
@@ -197,6 +193,196 @@ public class Mod : ModBase // <= Do not Remove.
     private nint _LEA_14a8ab88f_Address;
     private nint _LEA_14bd93fea_Address;
     
+    // For DAT_142226bf4
+    private nint _TEST_140764760_Address;
+    private nint _TEST_140ad2e25_Address;
+    private nint _LEA_140b110f8_Address;
+    private nint _TEST_140b31f96_Address;
+    private nint _TEST_140b32a54_Address;
+    private nint _TEST_140b74509_Address;
+    private nint _LEA_140e2bc7f_Address;
+    private nint _LEA_14bc3c1d9_Address;
+    
+    // For DAT_142226bf6
+    private nint _LEA_140101809_Address;
+    private nint _LEA_1401018a9_Address;
+    private nint _CMP_14077bd39_Address;
+    private nint _CMP_14077f324_Address;
+    private nint _CMP_14077ffe1_Address;
+    private nint _CMP_140911e33_Address;
+    private nint _CMP_1409257c3_Address;
+    private nint _CMP_140911f4c_Address;
+    private nint _CMP_1409258dc_Address;
+    private nint _CMP_140950c7e_Address;
+    private nint _LEA_140e3335c_Address;
+    
+    // For DAT_142226bf7
+    private nint _MOVZX_14073aa19_Address;
+    private nint _MOVZX_140ac6527_Address;
+    private nint _MOVZX_140d07c3b_Address;
+    private nint _MOVZX_140d0ac7c_Address;
+    private nint _MOVZX_140e335c8_Address;
+    private nint _LEA_14171e63b_Address;
+    private nint _MOVZX_14177b5ae_Address;
+    private nint _LEA_141780be8_Address;
+    
+    // For DAT_142226bfc
+    private nint _CMP_14074211f_Address;
+    private nint _CMP_140742760_Address;
+    private nint _MOVZX_140770766_Address;
+    private nint _MOVZX_140770911_Address;
+    private nint _LEA_1407b8b36_Address;
+    private nint _CMP_1407ba966_Address;
+    private nint _MOVZX_1407bde19_Address;
+    private nint _MOVZX_1407be616_Address;
+    private nint _LEA_1407bf421_Address;
+    private nint _LEA_1407c84a2_Address;
+    private nint _LEA_1407e5a4e_Address;
+    private nint _LEA_1407ecfc0_Address;
+    private nint _LEA_1407ed288_Address;
+    private nint _LEA_1407ed9e6_Address;
+    private nint _LEA_1407edc4a_Address;
+    private nint _LEA_1407ee1dd_Address;
+    private nint _LEA_1407ee483_Address;
+    private nint _LEA_1407efdb8_Address;
+    private nint _LEA_1407f1a15_Address;
+    private nint _LEA_1407f2964_Address;
+    private nint _LEA_1407f32f4_Address;
+    private nint _LEA_1407f5514_Address;
+    private nint _LEA_1407f5a63_Address;
+    private nint _LEA_1407f6223_Address;
+    private nint _LEA_1407f6d53_Address;
+    private nint _LEA_1407f83d3_Address;
+    private nint _LEA_1407f9327_Address;
+    private nint _LEA_1407f9ac3_Address;
+    private nint _CMP_1407fa38f_Address;
+    private nint _MOVZX_140800dbc_Address;
+    private nint _MOVZX_140808efa_Address;
+    private nint _MOVZX_140809ad7_Address;
+    private nint _MOVZX_1409ec814_Address;
+    private nint _CMP_140ac4cb6_Address;
+    private nint _LEA_140acc3d0_Address;
+    private nint _MOVZX_140ad3048_Address;
+    private nint _MOVZX_140ad37ee_Address;
+    private nint _LEA_140ada874_Address;
+    private nint _LEA_140b5115b_Address;
+    private nint _CMP_140b53c15_Address;
+    private nint _LEA_140b7daa1_Address;
+    private nint _LEA_140b7ec53_Address;
+    private nint _LEA_140b82003_Address;
+    private nint _MOVZX_140d23838_Address;
+    private nint _LEA_140d73d5f_Address;
+    private nint _LEA_140e3519a_Address;
+    private nint _MOVZX_14123d8c3_Address;
+    
+    // For DAT_142226bfd
+    private nint _MOVZX_1407ba194_Address;
+    private nint _LEA_140ad5841_Address;
+    private nint _LEA_140ad5bb6_Address;
+    private nint _LEA_140b764d7_Address;
+    private nint _LEA_14bd9429a_Address;
+    
+    // For DAT_142226bfe
+    private nint _MOVZX_1407ba19d_Address;
+    
+    // For DAT_142226c00
+    private nint _LEA_1407ba233_Address;
+    
+    // For DAT_142226c04
+    private nint _CMP_140e12a8d_Address;
+    private nint _CMP_140e12b6a_Address;
+    
+    // For DAT_142226c06
+    private nint _MOVZX_1409f1a37_Address;
+    
+    // For DAT_142226c07
+    private nint _MOVZX_1400fa0d5_Address;
+    private nint _MOVZX_1407fac4b_Address;
+    private nint _MOVZX_140883961_Address;
+    private nint _MOVZX_14088476c_Address;
+    private nint _CMP_1408a8c77_Address;
+    private nint _MOVZX_1408eb238_Address;
+    private nint _MOVZX_140911e42_Address;
+    private nint _MOVZX_140911f5b_Address;
+    private nint _MOVZX_1409257d2_Address;
+    private nint _MOVZX_1409258eb_Address;
+    private nint _MOVZX_1409ec823_Address;
+    private nint _CMP_140e12342_Address;
+    private nint _MOVZX_140e12850_Address;
+    private nint _MOVZX_140e332ad_Address;
+    private nint _MOVZX_140e3348d_Address;
+    
+    // For DAT_142226c0a
+    private nint _MOVZX_1408eb24d_Address;
+    private nint _MOVZX_140e332a2_Address;
+    private nint _MOVZX_140e33482_Address;
+    private nint _MOVZX_140e347d8_Address;
+    
+    // For DAT_142226c0e
+    private nint _CMP_1400f9485_Address;
+    private nint _CMP_1400fa0fb_Address;
+    private nint _MOVZX_140e10715_Address;
+    private nint _CMP_140e110c9_Address;
+    private nint _MOVZX_140e11193_Address;
+    private nint _CMP_140e11dee_Address;
+    private nint _CMP_140e1234c_Address;
+    private nint _CMP_140e1238f_Address;
+    private nint _CMP_140e13023_Address;
+    private nint _CMP_140e33a92_Address;
+    private nint _CMP_140e33aee_Address;
+    private nint _CMP_140e347c3_Address;
+    
+    // For DAT_142226c0f
+    private nint _CMP_1400f948f_Address;
+    private nint _CMP_1400fa10a_Address;
+    private nint _CMP_140e11de0_Address;
+    private nint _CMP_140e12399_Address;
+    private nint _CMP_140e1302d_Address;
+    private nint _CMP_140e347ce_Address;
+    
+    // For DAT_142226c10
+    private nint _TEST_1400f9499_Address;
+    private nint _TEST_1400fa119_Address;
+    private nint _TEST_1407703a6_Address;
+    private nint _LEA_14080e0c4_Address;
+    private nint _TEST_1408a8c39_Address;
+    private nint _MOV_140e110a9_Address;
+    private nint _TEST_140e1235a_Address;
+    private nint _TEST_140e123a3_Address;
+    private nint _TEST_140e12a9b_Address;
+    private nint _TEST_140e13037_Address;
+    private nint _TEST_140e33af8_Address;
+    
+    // For DAT_142226c14
+    private nint _TEST_1400fa0a0_Address;
+    private nint _TEST_1400fa1da_Address;
+    private nint _LEA_140ad7871_Address;
+    private nint _MOV_140e33b47_Address;
+    
+    // For DAT_142226c18
+    private nint _MOV_140e33b4e_Address;
+    
+    // For DAT_142226c1c
+    private nint _MOVZX_1400fa087_Address;
+    private nint _MOVZX_1400fa1c7_Address;
+    private nint _CMP_1407ba25f_Address;
+    private nint _TEST_1408a8c2f_Address;
+    private nint _CMP_140ac516e_Address;
+    private nint _CMP_140ac59fa_Address;
+    private nint _CMP_140e104af_Address;
+    private nint _CMP_140e106ea_Address;
+    private nint _CMP_140e11083_Address;
+    private nint _MOVZX_140e111c8_Address;
+    private nint _MOVZX_140e12668_Address;
+    private nint _CMP_140e12a2c_Address;
+    private nint _CMP_140e33a71_Address;
+    private nint _MOVZX_140e33cd4_Address;
+    private nint _MOVZX_140e34851_Address;
+    
+    // For DAT_142226c1d
+    private nint _MOVZX_140e4035c_Address;
+    private nint _MOVZX_140e40427_Address;
+    
     
     private readonly ScannerWrapper _scanner;
 
@@ -232,8 +418,6 @@ public class Mod : ModBase // <= Do not Remove.
             // Loads TBL files
             _scanner.GetFunctionHook<FUN_140e39b70>("FUN_140e39b70", "48 89 5C 24 ?? 56 48 83 EC 20 48 8B 59 ?? 8B 03",
                 FUN_140e39b70_Custom, hook => FUN_140e39b70_Hook = hook);
-            _scanner.GetFunctionHook<FUN_140e3dc90>("FUN_140e3dc90", "48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC 20 8B 19",
-                FUN_140e3dc90_Custom, hook => FUN_140e3dc90_Hook = hook);
             
             
             // ======================================================
@@ -242,6 +426,7 @@ public class Mod : ModBase // <= Do not Remove.
             _scanner.ScanForData("DAT_142226bf0", "48 8D 05 ?? ?? ?? ?? 4C 03 CD", 7, 3, 0,
                 address => _DAT_142226bf0_Address = address);
             
+            // For DAT_142226bf0
             _scanner.Scan("LEA_140105ab5", "4C 8D 15 ?? ?? ?? ?? 4C 8D 0C ?? 4D 03 C9",
                 address => _LEA_140105ab5_Address = address);
             _scanner.Scan("TEST_140719e12", "41 F7 84 ?? ?? ?? ?? ?? 00 00 01 00 0F 84 ?? ?? ?? ?? 48 8B 9B ?? ?? ?? ??",
@@ -514,21 +699,372 @@ public class Mod : ModBase // <= Do not Remove.
                 address => _LEA_14a8ab88f_Address = address);
             _scanner.Scan("LEA_14bd93fea", "48 8D 05 ?? ?? ?? ?? 83 7C ?? ?? 00 75 ??",
                 address => _LEA_14bd93fea_Address = address);
+            
+            // For DAT_142226bf4
+            _scanner.Scan("TEST_140764760", "41 F6 84 ?? ?? ?? ?? ?? 02 0F 84 ?? ?? ?? ?? 41 80 BC ?? ?? ?? ?? ?? 0A",
+                address => _TEST_140764760_Address = address);
+            _scanner.Scan("TEST_140ad2e25", "42 F6 84 ?? ?? ?? ?? ?? 02 0F 84 ?? ?? ?? ?? 0F 57 C0",
+                address => _TEST_140ad2e25_Address = address);
+            _scanner.Scan("LEA_140b110f8", "4C 8D 1D ?? ?? ?? ?? 90 8B CA",
+                address => _LEA_140b110f8_Address = address);
+            _scanner.Scan("TEST_140b31f96", "42 F6 84 ?? ?? ?? ?? ?? 02 0F 84 ?? ?? ?? ?? 4D 8D B9 ?? ?? ?? ??",
+                address => _TEST_140b31f96_Address = address);
+            _scanner.Scan("TEST_140b32a54", "F6 84 ?? ?? ?? ?? ?? 02 0F 84 ?? ?? ?? ?? 4C 8D B2 ?? ?? ?? ??",
+                address => _TEST_140b32a54_Address = address);
+            _scanner.Scan("TEST_140b74509", "42 F6 84 ?? ?? ?? ?? ?? 02 0F 84 ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ??",
+                address => _TEST_140b74509_Address = address);
+            _scanner.Scan("LEA_140e2bc7f", "48 8D 0D ?? ?? ?? ?? F6 04 ?? 01 75 ??",
+                address => _LEA_140e2bc7f_Address = address);
+            _scanner.Scan("LEA_14bc3c1d9", "48 8D 05 ?? ?? ?? ?? F6 04 ?? 02 74 ??",
+                address => _LEA_14bc3c1d9_Address = address);
+            
+            // For DAT_142226bf6
+            _scanner.ScanMany("LEA_140101809 and LEA_1401018a9", "48 8D 05 ?? ?? ?? ?? 80 3C ?? 01 74 ?? 41 B8 03 00 00 00 EB ?? 41 B8 02 00 00 00 EB ?? 41 B8 04 00 00 00 45 33 C9 48 8B D6 48 8B CF 48 8B 5C 24 ?? 48 8B 74 24 ?? 48 83 C4 20 5F E9 ?? ?? ?? ??",
+                2, addresses =>
+                {
+                    _LEA_140101809_Address = addresses[0];
+                    _LEA_1401018a9_Address = addresses[1];
+                });
+            _scanner.Scan("CMP_14077bd39", "80 BC ?? ?? ?? ?? ?? 01 0F 95 C3",
+                address => _CMP_14077bd39_Address = address);
+            _scanner.Scan("CMP_14077f324", "80 BC ?? ?? ?? ?? ?? 01 40 0F 94 C7 48 8B 4C 24 ?? 48 8B 45 ??",
+                address => _CMP_14077f324_Address = address);
+            _scanner.Scan("CMP_14077ffe1", "80 BC ?? ?? ?? ?? ?? 01 40 0F 94 C7 48 8D 4C 24 ??",
+                address => _CMP_14077ffe1_Address = address);
+            _scanner.ScanMany("CMP_140911e33 and CMP_1409257c3", "43 80 BC ?? ?? ?? ?? ?? 01 0F 85 ?? ?? ?? ?? 43 0F B6 84 ?? ?? ?? ?? ?? 3C 0A 0F 87 ?? ?? ?? ?? B9 52 05 00 00 0F A3 C1 0F 83 ?? ?? ?? ?? 48 8B 45 ?? 48 89 5D ?? 48 85 D2 0F 85 ?? ?? ?? ?? 48 85 C0 0F 85 ?? ?? ?? ?? 49 8B 00 BA 01 00 00 00 49 8B C8 FF 10 48 8B 4D ?? 48 8B 55 ?? 48 89 75 ?? E9 ?? ?? ?? ?? 48 8B 45 ?? 48 89 5D ?? 48 85 D2 75 ?? 48 85 C0 75 ?? 49 8B 00 BA 01 00 00 00 49 8B C8 FF 10 48 8B 4D ?? 48 8B 55 ?? 48 89 75 ?? EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 55 ?? 48 89 50 ?? 48 8B CE 48 8B D6 48 89 4D ?? 48 89 55 ?? 48 8D 05 ?? ?? ?? ?? 48 89 45 ?? 48 85 D2 75 ?? 48 85 C9 0F 84 ?? ?? ?? ?? 48 89 51 ?? 48 89 75 ?? 48 89 75 ?? E9 ?? ?? ?? ?? 48 89 4A ?? 48 8B 4D ?? 48 85 C9 74 ?? 48 8B 55 ?? 48 89 51 ?? 48 89 75 ?? 48 89 75 ?? E9 ?? ?? ?? ?? 41 83 78 ?? 01 0F 85 ?? ?? ?? ?? 41 0F B7 40 ?? 48 8D 0C ?? 48 03 C9 41 80 BC ?? ?? ?? ?? ?? 02 0F 85 ?? ?? ?? ?? 41 0F B6 84 ?? ?? ?? ?? ?? E9 ?? ?? ?? ?? 41 83 78 ?? 01 0F 85 ?? ?? ?? ?? 41 0F B7 40 ?? 41 80 BC ?? ?? ?? ?? ?? 15 E9 ?? ?? ?? ?? 45 8B 48 ?? 41 8D 41 ?? 83 F8 01 0F 87 ?? ?? ?? ?? 41 8B 40 ?? 41 83 F9 02 75 ?? 0F B7 C8 E8 ?? ?? ?? ?? 4C 8B 45 ?? 48 8B 55 ?? 0F B7 C0 0F B7 C0 49 8D 8E ?? ?? ?? ?? 48 8D 0C ?? 48 85 C9 0F 84 ?? ?? ?? ?? 80 39 ?? 0F 85 ?? ?? ?? ?? 48 89 5D ?? 48 85 D2 75 ?? 48 8B 4D ?? 48 85 C9 75 ?? 4D 85 C0 0F 84 ?? ?? ?? ?? EB ?? 48 8B 45 ?? 48 89 42 ?? 48 8B 4D ?? 48 85 C9 74 ?? 48 8B 55 ?? 48 89 51 ?? EB ?? 41 83 78 ?? 04 EB ?? 41 83 78 ?? 07 EB ?? 41 83 78 ?? 02 0F 85 ?? ?? ?? ?? 48 8B 45 ?? 48 89 5D ?? 48 85 D2 75 ?? 48 85 C0 75 ?? 49 8B 00 BA 01 00 00 00 49 8B C8 FF 10 48 8B 4D ?? 48 8B 55 ?? 48 89 75 ?? EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 55 ?? 48 89 50 ?? 48 8B CE 48 8B D6 48 89 4D ?? 48 89 55 ?? 48 8D 05 ?? ?? ?? ?? 48 89 45 ?? 48 85 D2 75 ?? 48 85 C9 74 ?? EB ?? 48 89 4A ?? 48 8B 4D ?? 48 85 C9 74 ?? 48 8B 55 ?? 48 89 51 ?? 48 89 75 ?? 48 89 75 ?? 48 8B CF E8 ?? ?? ?? ?? B0 01 EB ?? 48 8B 45 ?? 48 89 5D ?? 48 85 D2 75 ?? 48 85 C0 75 ?? 4D 85 C0 74 ?? 49 8B 00 BA 01 00 00 00 49 8B C8 FF 10 48 8B 4D ?? 48 8B 45 ?? 48 85 C9 75 ?? 48 85 C0 74 ?? 48 89 48 ?? EB ?? 48 89 41 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 4D ?? 48 89 48 ?? EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 55 ?? 48 89 50 ?? 48 8B CF E8 ?? ?? ?? ?? 32 C0 4C 8B 74 24 ?? 48 8B 5C 24 ?? 48 8B 74 24 ?? 48 8B 7C 24 ?? 48 83 C4 40 5D C3",
+                2, addresses =>
+                {
+                    _CMP_140911e33_Address = addresses[0];
+                    _CMP_1409257c3_Address = addresses[1];
+                });
+            _scanner.ScanMany("CMP_140911f4c and CMP_1409258dc", "41 80 BC ?? ?? ?? ?? ?? 02 0F 85 ?? ?? ?? ?? 41 0F B6 84 ?? ?? ?? ?? ?? E9 ?? ?? ?? ?? 41 83 78 ?? 01 0F 85 ?? ?? ?? ?? 41 0F B7 40 ?? 41 80 BC ?? ?? ?? ?? ?? 15 E9 ?? ?? ?? ?? 45 8B 48 ?? 41 8D 41 ?? 83 F8 01 0F 87 ?? ?? ?? ?? 41 8B 40 ?? 41 83 F9 02 75 ?? 0F B7 C8 E8 ?? ?? ?? ?? 4C 8B 45 ?? 48 8B 55 ?? 0F B7 C0 0F B7 C0 49 8D 8E ?? ?? ?? ?? 48 8D 0C ?? 48 85 C9 0F 84 ?? ?? ?? ?? 80 39 ?? 0F 85 ?? ?? ?? ?? 48 89 5D ?? 48 85 D2 75 ?? 48 8B 4D ?? 48 85 C9 75 ?? 4D 85 C0 0F 84 ?? ?? ?? ?? EB ?? 48 8B 45 ?? 48 89 42 ?? 48 8B 4D ?? 48 85 C9 74 ?? 48 8B 55 ?? 48 89 51 ?? EB ?? 41 83 78 ?? 04 EB ?? 41 83 78 ?? 07 EB ?? 41 83 78 ?? 02 0F 85 ?? ?? ?? ?? 48 8B 45 ?? 48 89 5D ?? 48 85 D2 75 ?? 48 85 C0 75 ?? 49 8B 00 BA 01 00 00 00 49 8B C8 FF 10 48 8B 4D ?? 48 8B 55 ?? 48 89 75 ?? EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 55 ?? 48 89 50 ?? 48 8B CE 48 8B D6 48 89 4D ?? 48 89 55 ?? 48 8D 05 ?? ?? ?? ?? 48 89 45 ?? 48 85 D2 75 ?? 48 85 C9 74 ?? EB ?? 48 89 4A ?? 48 8B 4D ?? 48 85 C9 74 ?? 48 8B 55 ?? 48 89 51 ?? 48 89 75 ?? 48 89 75 ?? 48 8B CF E8 ?? ?? ?? ?? B0 01 EB ?? 48 8B 45 ?? 48 89 5D ?? 48 85 D2 75 ?? 48 85 C0 75 ?? 4D 85 C0 74 ?? 49 8B 00 BA 01 00 00 00 49 8B C8 FF 10 48 8B 4D ?? 48 8B 45 ?? 48 85 C9 75 ?? 48 85 C0 74 ?? 48 89 48 ?? EB ?? 48 89 41 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 4D ?? 48 89 48 ?? EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 55 ?? 48 89 50 ?? 48 8B CF E8 ?? ?? ?? ?? 32 C0 4C 8B 74 24 ?? 48 8B 5C 24 ?? 48 8B 74 24 ?? 48 8B 7C 24 ?? 48 83 C4 40 5D C3",
+                2, addresses =>
+                {
+                    _CMP_140911f4c_Address = addresses[0];
+                    _CMP_1409258dc_Address = addresses[1];
+                });
+            _scanner.Scan("CMP_140950c7e", "41 80 BC ?? ?? ?? ?? ?? 01 40 0F 94 C7",
+                address => _CMP_140950c7e_Address = address);
+            _scanner.Scan("LEA_140e3335c", "48 8D 05 ?? ?? ?? ?? 80 3C ?? 01 74 ?? 32 C0",
+                address => _LEA_140e3335c_Address = address);
+            
+            // For DAT_142226bf7
+            _scanner.Scan("MOVZX_14073aa19", "0F B6 9C ?? ?? ?? ?? ?? 48 8D 05 ?? ?? ?? ?? 48 8D 4D ??",
+                address => _MOVZX_14073aa19_Address = address);
+            _scanner.Scan("MOVZX_140ac6527", "0F B6 BC ?? ?? ?? ?? ?? 48 8D 8D ?? ?? ?? ??",
+                address => _MOVZX_140ac6527_Address = address);
+            _scanner.Scan("MOVZX_140d07c3b", "0F B6 8C ?? ?? ?? ?? ?? 83 E9 01 74 ?? 83 F9 01 0F 85 ?? ?? ?? ?? 41 BE 1C 01 00 00",
+                address => _MOVZX_140d07c3b_Address = address);
+            _scanner.Scan("MOVZX_140d0ac7c", "41 0F B6 8C ?? ?? ?? ?? ?? 83 E9 01",
+                address => _MOVZX_140d0ac7c_Address = address);
+            _scanner.Scan("MOVZX_140e335c8", "41 0F B6 84 ?? ?? ?? ?? ?? 3C 01",
+                address => _MOVZX_140e335c8_Address = address);
+            _scanner.Scan("LEA_14171e63b", "48 8D 05 ?? ?? ?? ?? 44 0F B6 04 ?? 41 83 E8 01",
+                address => _LEA_14171e63b_Address = address);
+            _scanner.Scan("MOVZX_14177b5ae", "0F B6 8C ?? ?? ?? ?? ?? 83 E9 01 74 ?? 83 F9 01 0F 85 ?? ?? ?? ?? BF 1C 01 00 00 41 0F B7 C6",
+                address => _MOVZX_14177b5ae_Address = address);
+            _scanner.Scan("LEA_141780be8", "48 8D 05 ?? ?? ?? ?? 0F B6 14 ?? 83 EA 01",
+                address => _LEA_141780be8_Address = address);
+            
+            // For DAT_142226bfc
+            _scanner.Scan("CMP_14074211f", "41 80 BC ?? ?? ?? ?? ?? 00 0F 84 ?? ?? ?? ?? 48 8B 5C 24 ??",
+                address => _CMP_14074211f_Address = address);
+            _scanner.Scan("CMP_140742760", "41 80 BC ?? ?? ?? ?? ?? 00 0F 84 ?? ?? ?? ?? 48 8B 5D ??",
+                address => _CMP_140742760_Address = address);
+            _scanner.Scan("MOVZX_140770766", "0F B6 84 ?? ?? ?? ?? ?? 48 8D 4D 00",
+                address => _MOVZX_140770766_Address = address);
+            _scanner.Scan("MOVZX_140770911", "44 0F B6 A4 ?? ?? ?? ?? ?? 48 8D 4D ??",
+                address => _MOVZX_140770911_Address = address);
+            _scanner.Scan("LEA_1407b8b36", "48 8D 05 ?? ?? ?? ?? F6 04 ?? 03 0F 84 ?? ?? ?? ?? 48 8B 5D ?? 48 85 DB 0F 84 ?? ?? ?? ?? 0F 1F 40 00 0F 1F 84 ?? 00 00 00 00",
+                address => _LEA_1407b8b36_Address = address);
+            _scanner.Scan("CMP_1407ba966", "40 38 BC ?? ?? ?? ?? ?? 0F 84 ?? ?? ?? ?? 4C 8B 65 ??",
+                address => _CMP_1407ba966_Address = address);
+            _scanner.Scan("MOVZX_1407bde19", "41 0F B6 84 ?? ?? ?? ?? ?? 84 C0 0F 85 ?? ?? ?? ?? 48 8B 45 ??",
+                address => _MOVZX_1407bde19_Address = address);
+            _scanner.Scan("MOVZX_1407be616", "41 0F B6 84 ?? ?? ?? ?? ?? 84 C0 0F 85 ?? ?? ?? ?? 0F 57 C0",
+                address => _MOVZX_1407be616_Address = address);
+            _scanner.Scan("LEA_1407bf421", "41 0F B6 84 ?? ?? ?? ?? ?? 84 C0 0F 85 ?? ?? ?? ?? 0F 57 C0",
+                address => _LEA_1407bf421_Address = address);
+            _scanner.Scan("LEA_1407c84a2", "48 8D 05 ?? ?? ?? ?? 80 3C ?? 00 0F 84 ?? ?? ?? ??",
+                address => _LEA_1407c84a2_Address = address);
+            _scanner.Scan("LEA_1407e5a4e", "48 8D 05 ?? ?? ?? ?? 0F B6 1C ?? 48 8B CF E8 ?? ?? ?? ?? 48 8B 74 24 ??",
+                address => _LEA_1407e5a4e_Address = address);
+            _scanner.Scan("LEA_1407ecfc0", "48 8D 1D ?? ?? ?? ?? 41 B8 FF 0F 00 00",
+                address => _LEA_1407ecfc0_Address = address);
+            _scanner.Scan("LEA_1407ed288", "48 8D 1D ?? ?? ?? ?? 2B 45 ??",
+                address => _LEA_1407ed288_Address = address);
+            _scanner.Scan("LEA_1407ed9e6", "4C 8D 05 ?? ?? ?? ?? 0F B7 F3",
+                address => _LEA_1407ed9e6_Address = address);
+            _scanner.Scan("LEA_1407edc4a", "4C 8D 05 ?? ?? ?? ?? 2B C3",
+                address => _LEA_1407edc4a_Address = address);
+            _scanner.Scan("LEA_1407ee1dd", "48 8D 15 ?? ?? ?? ?? 44 0F B7 FF",
+                address => _LEA_1407ee1dd_Address = address);
+            _scanner.Scan("LEA_1407ee483", "48 8D 15 ?? ?? ?? ?? 48 83 C6 02 49 83 EF 01 0F 85 ?? ?? ?? ?? 4C 8B 75 ??",
+                address => _LEA_1407ee483_Address = address);
+            _scanner.Scan("LEA_1407efdb8", "48 8D 05 ?? ?? ?? ?? F6 04 ?? 03 0F 84 ?? ?? ?? ?? 48 8B CB",
+                address => _LEA_1407efdb8_Address = address);
+            _scanner.Scan("LEA_1407f1a15", "48 8D 05 ?? ?? ?? ?? F6 04 ?? 03 0F 84 ?? ?? ?? ?? 49 8D 4D ??",
+                address => _LEA_1407f1a15_Address = address);
+            _scanner.ScanMany("LEA_1407f2964 and LEA_1407f32f4", "48 8D 05 ?? ?? ?? ?? F6 04 ?? 03 0F 84 ?? ?? ?? ?? 48 8B CF E8 ?? ?? ?? ?? 4D 85 E4 0F 84 ?? ?? ?? ?? 45 33 ED 48 8D 35 ?? ?? ?? ?? 49 8D 4C 24 ?? 0F 57 C0 4D 8B 24 24 F3 0F 7F 44 24 ?? 48 89 74 24 ?? 4C 89 6C 24 ?? 48 8B 41 ?? 48 85 C0 74 ?? 48 89 44 24 ?? 48 8D 54 24 ?? 48 89 4C 24 ?? 48 8B 41 ?? 48 89 50 ?? 48 8D 44 24 ?? 48 89 41 ?? EB ?? 48 8D 44 24 ?? 48 89 41 ?? 48 89 4C 24 ?? 48 8B 44 24 ?? 48 8B 51 ?? 48 89 54 24 ?? 4C 89 6D ?? 48 89 75 ?? 48 85 C0 74 ?? 48 8D 4C 24 ?? 48 89 45 ?? 48 89 4D ?? 48 8D 4D ?? 48 89 48 ?? 48 8D 45 ?? 48 8B 54 24 ?? 48 89 44 24 ?? EB ?? 48 8D 45 ?? 48 89 44 24 ?? 48 8D 44 24 ?? 48 89 45 ?? 48 89 55 ?? 48 8B CF 48 8D 55 ?? E8 ?? ?? ?? ?? 48 8D 4D ?? E8 ?? ?? ?? ?? 48 8B 4C 24 ?? 48 8B 44 24 ?? 48 89 74 24 ?? 48 85 C9 75 ?? 48 85 C0 75 ?? 48 8B 4C 24 ?? 48 85 C9 74 ?? 48 8B 01 BA 01 00 00 00 FF 10 48 8B 4C 24 ?? 48 8B 44 24 ?? 48 85 C9 75 ?? 48 85 C0 74 ?? EB ?? 48 89 41 ?? 48 8B 44 24 ?? 48 85 C0 74 ?? 48 8B 4C 24 ?? 48 89 48 ?? 4D 85 E4 0F 85 ?? ?? ?? ?? 48 8D 3D ?? ?? ?? ?? 48 8D 4D ?? 48 89 7D ?? E8 ?? ?? ?? ?? 48 8D 4D ?? 48 89 7D ?? E8 ?? ?? ?? ?? 49 8B CE E8 ?? ?? ?? ?? 85 DB 0F 95 C0 E9 ?? ?? ?? ?? 48 8B 55 ?? 4C 8D 25 ?? ?? ?? ?? 0F 57 C0 4C 89 65 ?? 45 33 ED 48 8D 4D ?? F3 0F 7F 45 ?? 4C 89 6D ?? E8 ?? ?? ?? ?? 48 8D 55 ?? 48 8D 4D ?? E8 ?? ?? ?? ?? 84 C0 75 ?? 85 DB 0F 84 ?? ?? ?? ?? 8B 15 ?? ?? ?? ?? 81 FA 70 02 00 00 7C ?? E8 ?? ?? ?? ?? 41 8B D5 48 8B 05 ?? ?? ?? ?? 48 63 CA FF C2 89 15 ?? ?? ?? ?? 33 D2 8B 04 ?? F7 F3 85 D2 74 ?? 8B C2 0F 1F 44 ?? 00 4D 8B 3F 48 83 E8 01 75 ?? 0F 57 C0 4C 89 65 ?? 49 8D 57 ?? 4C 89 6D ?? 48 8D 4D ?? F3 0F 7F 45 ?? E8 ?? ?? ?? ?? 48 8D 55 ?? 48 8B CF E8 ?? ?? ?? ?? 48 8D 4D ?? E8 ?? ?? ?? ?? 48 8D 3D ?? ?? ?? ?? 48 8D 4D ?? 48 89 7D ?? E8 ?? ?? ?? ?? 48 8D 4D ?? 48 89 7D ?? E8 ?? ?? ?? ?? 49 8B CE E8 ?? ?? ?? ?? B0 01 EB ?? 0F 57 C0 4C 89 65 ?? 49 8B D6 4C 89 6D ?? 48 8D 4D ?? F3 0F 7F 45 ?? E8 ?? ?? ?? ?? 8B D6 48 8D 4D ?? E8 ?? ?? ?? ?? 48 8D 3D ?? ?? ?? ?? 48 8D 4D ?? 48 89 7D ?? E8 ?? ?? ?? ?? 48 8D 4D ?? 48 89 7D ?? E8 ?? ?? ?? ?? 49 8B CE E8 ?? ?? ?? ?? 32 C0 48 81 C4 18 01 00 00 41 5F 41 5E 41 5D 41 5C 5F 5E 5B 5D C3",
+                2, addresses =>
+                {
+                    _LEA_1407f2964_Address = addresses[0];
+                    _LEA_1407f32f4_Address = addresses[1];
+                });
+            _scanner.Scan("LEA_1407f5514", "48 8D 05 ?? ?? ?? ?? F6 04 ?? 03 0F 84 ?? ?? ?? ?? 48 8B 5D ?? 48 85 DB 0F 84 ?? ?? ?? ?? 0F 1F 40 00 66 66 0F 1F 84 ?? 00 00 00 00",
+                address => _LEA_1407f5514_Address = address);
+            _scanner.ScanMany("LEA_1407f5a63 and LEA_1407f6d53", "48 8D 05 ?? ?? ?? ?? 44 38 24 ?? 0F 84 ?? ?? ?? ?? 48 8B 5D ?? 48 85 DB 0F 84 ?? ?? ?? ?? 48 8D 7B ?? 48 8B 1B 48 8D 44 24 ?? 48 3B F8 74 ?? 48 8B 45 ?? 48 39 47 ?? 74 ?? 48 8D 4C 24 ?? E8 ?? ?? ?? ?? EB ?? 48 8B 4C 24 ?? 48 8B 45 ?? 48 85 C9 75 ?? 48 85 C0 74 ?? EB ?? 48 89 41 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 4C 24 ?? 48 89 48 ?? 4C 89 65 ?? 4C 89 64 24 ?? 48 8B D7 48 8D 4C 24 ?? E8 ?? ?? ?? ?? 48 8B 45 ?? 4C 89 65 ?? 4C 89 6D ?? 48 85 C0 74 ?? 48 8D 4C 24 ?? 48 89 45 ?? 48 89 4D ?? 48 8D 4D ?? 48 89 48 ?? 48 8D 45 ?? 48 89 45 ?? EB ?? 48 8D 45 ?? 48 89 45 ?? 48 8D 44 24 ?? 48 89 45 ?? 48 8B 45 ?? 48 8D 55 ?? 49 8B CE 48 89 45 ?? E8 ?? ?? ?? ?? 48 8D 4D ?? E8 ?? ?? ?? ?? 48 85 DB 0F 85 ?? ?? ?? ?? 48 8B 55 ?? 48 8B 45 ?? 48 85 D2 75 ?? 48 85 C0 75 ?? 48 8B 4D ?? 48 85 C9 74 ?? 48 8B 01 BA 01 00 00 00 FF 10 EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 55 ?? 48 89 50 ?? 48 8B 45 ?? 48 8B 55 ?? 48 89 75 ?? 48 85 D2 75 ?? 48 85 C0 74 ?? EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 55 ?? 48 89 50 ?? 4C 8B 44 24 ?? 48 8B 45 ?? 4C 89 6C 24 ?? 4D 85 C0 75 ?? 48 85 C0 75 ?? 48 8B 4D ?? 48 85 C9 74 ?? 48 8B 01 41 8D 50 ?? FF 10 48 8B 45 ?? 4C 8B 44 24 ?? 4C 89 65 ?? EB ?? 49 89 40 ?? 48 8B 45 ?? 48 85 C0 74 ?? 4C 8B 44 24 ?? 4C 89 40 ?? 49 8B C4 4C 89 64 24 ?? 48 89 45 ?? 4D 8B C4 48 89 74 24 ?? 4D 85 C0 75 ?? 48 85 C0 0F 84 ?? ?? ?? ?? 4C 89 40 ?? 4C 89 64 24 ?? 4C 89 65 ?? E9 ?? ?? ?? ?? 49 89 40 ?? 48 8B 45 ?? 48 85 C0 0F 84 ?? ?? ?? ?? 4C 8B 44 24 ?? 4C 89 40 ?? 4C 89 64 24 ?? 4C 89 65 ?? E9 ?? ?? ?? ?? 0F 57 C0 4C 89 6D ?? 48 8D 53 ?? 4C 89 65 ?? 48 8D 4D ?? F3 0F 7F 45 ?? E8 ?? ?? ?? ?? 48 8D 55 ?? 48 8D 4D ?? E8 ?? ?? ?? ?? 84 C0 0F 84 ?? ?? ?? ?? 48 8B 55 ?? 48 8B 45 ?? 48 85 D2 75 ?? 48 85 C0 75 ?? 48 8B 4D ?? 48 85 C9 74 ?? 48 8B 01 BA 01 00 00 00 FF 10 EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 55 ?? 48 89 50 ?? 48 8B 45 ?? 48 8B 55 ?? 48 89 75 ?? 48 85 D2 75 ?? 48 85 C0 74 ?? EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 55 ?? 48 89 50 ?? 48 8B 54 24 ?? 48 8B 45 ?? 4C 89 6C 24 ?? 48 85 D2 75 ?? 48 85 C0 75 ?? 48 8B 4D ?? 48 85 C9 74 ?? 48 8B 01 BA 01 00 00 00 FF 10 48 8B 45 ?? 48 8B 54 24 ?? 4C 89 65 ?? EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 54 24 ?? 48 89 50 ?? 49 8B C4 49 8B D4 48 89 45 ?? 48 89 54 24 ?? 48 89 74 24 ?? 48 85 D2 75 ?? 48 85 C0 0F 84 ?? ?? ?? ?? 48 89 50 ?? 4C 89 64 24 ?? 4C 89 65 ?? E9 ?? ?? ?? ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 54 24 ?? 48 89 50 ?? 4C 89 64 24 ?? 4C 89 65 ?? E9 ?? ?? ?? ?? 48 8B 7D ?? BE 00 00 00 80 48 85 FF 0F 84 ?? ?? ?? ?? 4C 8D 35 ?? ?? ?? ?? 48 8D 5F ?? 48 8B 3F 48 8D 44 24 ?? 48 3B D8 74 ?? 48 8B 45 ?? 48 39 43 ?? 74 ?? 48 8D 4C 24 ?? E8 ?? ?? ?? ?? EB ?? 48 8B 4C 24 ?? 48 8B 45 ?? 48 85 C9 75 ?? 48 85 C0 74 ?? EB ?? 48 89 41 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 4C 24 ?? 48 89 48 ?? 4C 89 65 ?? 4C 89 64 24 ?? 48 8B D3 48 8D 4C 24 ?? E8 ?? ?? ?? ?? 48 8B 45 ?? 4C 89 65 ?? 4C 89 6D ?? 48 85 C0 74 ?? 48 8D 4C 24 ?? 48 89 45 ?? 48 89 4D ?? 48 8D 4D ?? 48 89 48 ?? 48 8D 45 ?? 48 89 45 ?? EB ?? 48 8D 45 ?? 48 89 45 ?? 48 8D 44 24 ?? 48 89 45 ?? 48 8B 45 ?? 48 8D 4D ?? 0F 57 C0 48 89 45 ?? 49 8B D7 4C 89 6D ?? F3 0F 7F 45 ?? 4C 89 65 ?? E8 ?? ?? ?? ?? 48 8D 4D ?? E8 ?? ?? ?? ?? 48 8D 4D ?? E8 ?? ?? ?? ?? 49 8B 57 ?? 48 8D 4D ?? 0F 57 C0 4C 89 75 ?? 48 83 C2 40 4C 89 65 ?? F3 0F 7F 45 ?? E8 ?? ?? ?? ?? 48 8B 55 ?? 4C 8D 0D ?? ?? ?? ?? 0F 57 C0 4C 89 4D ?? 48 83 C2 18 4C 89 65 ?? 48 8D 4D ?? F3 0F 7F 45 ?? E8 ?? ?? ?? ?? 48 8B 4D ?? 48 8B 55 ?? 48 8B 41 ?? 8B 58 ?? 48 8B 45 ?? 4C 89 4D ?? 48 85 D2 75 ?? 48 85 C0 75 ?? 48 8B 01 BA 01 00 00 00 FF 10 48 8B 45 ?? 48 8B 4D ?? 4C 89 65 ?? EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 55 ?? 48 89 50 ?? 49 8B C4 49 8B CC 48 89 45 ?? 48 89 4D ?? 48 8D 15 ?? ?? ?? ?? 48 89 55 ?? 48 85 C9 75 ?? 48 85 C0 74 ?? EB ?? 48 89 41 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 4D ?? 48 89 48 ?? 4C 89 65 ?? 4C 89 65 ?? 48 8D 4D ?? 4C 89 75 ?? E8 ?? ?? ?? ?? 48 8B 4D ?? 48 8B 45 ?? 48 85 C9 75 ?? 48 85 C0 74 ?? EB ?? 48 89 41 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 4D ?? 48 89 48 ?? 3B DE 7E ?? 48 8B 45 ?? 48 8D 4D ?? 48 39 45 ?? 74 ?? E8 ?? ?? ?? ?? EB ?? E8 ?? ?? ?? ?? 48 8D 54 24 ?? 48 8D 4D ?? E8 ?? ?? ?? ?? 8B F3 48 85 FF 0F 85 ?? ?? ?? ?? 4C 8B 75 ?? 0F 57 C0 4C 89 6D ?? 48 8D 55 ?? 4C 89 65 ?? 48 8D 4D ?? F3 0F 7F 45 ?? E8 ?? ?? ?? ?? 48 8D 55 ?? 49 8B CE E8 ?? ?? ?? ?? 48 8D 4D ?? E8 ?? ?? ?? ?? 48 8D 4D ?? E8 ?? ?? ?? ?? 48 8D 4C 24 ?? E8 ?? ?? ?? ?? 48 8D 05 ?? ?? ?? ?? 48 8D 4D ?? 48 89 45 ?? E8 ?? ?? ?? ?? 49 8B CF E8 ?? ?? ?? ?? 4C 8D 9C 24 ?? ?? ?? ?? B0 01 49 8B 5B ?? 49 8B 73 ?? 49 8B 7B ?? 49 8B E3 41 5F 41 5E 41 5D 41 5C 5D C3",
+                2, addresses =>
+                {
+                    _LEA_1407f5a63_Address = addresses[0];
+                    _LEA_1407f6d53_Address = addresses[1];
+                });
+            _scanner.Scan("LEA_1407f6223", "48 8D 05 ?? ?? ?? ?? 44 38 24 ?? 0F 84 ?? ?? ?? ?? 48 8B 5D ?? 48 85 DB 0F 84 ?? ?? ?? ?? 48 8D 7B ?? 48 8B 1B 48 8D 44 24 ?? 48 3B F8 74 ?? 48 8B 45 ?? 48 39 47 ?? 74 ?? 48 8D 4C 24 ?? E8 ?? ?? ?? ?? EB ?? 48 8B 4C 24 ?? 48 8B 45 ?? 48 85 C9 75 ?? 48 85 C0 74 ?? EB ?? 48 89 41 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 4C 24 ?? 48 89 48 ?? 4C 89 65 ?? 4C 89 64 24 ?? 48 8B D7 48 8D 4C 24 ?? E8 ?? ?? ?? ?? 48 8B 45 ?? 4C 89 65 ?? 4C 89 6D ?? 48 85 C0 74 ?? 48 8D 4C 24 ?? 48 89 45 ?? 48 89 4D ?? 48 8D 4D ?? 48 89 48 ?? 48 8D 45 ?? 48 89 45 ?? EB ?? 48 8D 45 ?? 48 89 45 ?? 48 8D 44 24 ?? 48 89 45 ?? 48 8B 45 ?? 48 8D 55 ?? 49 8B CE 48 89 45 ?? E8 ?? ?? ?? ?? 48 8D 4D ?? E8 ?? ?? ?? ?? 48 85 DB 0F 85 ?? ?? ?? ?? 48 8B 55 ?? 48 8B 45 ?? 48 85 D2 75 ?? 48 85 C0 75 ?? 48 8B 4D ?? 48 85 C9 74 ?? 48 8B 01 BA 01 00 00 00 FF 10 EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 55 ?? 48 89 50 ?? 48 8B 45 ?? 48 8B 55 ?? 48 89 75 ?? 48 85 D2 75 ?? 48 85 C0 74 ?? EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 55 ?? 48 89 50 ?? 4C 8B 44 24 ?? 48 8B 45 ?? 4C 89 6C 24 ?? 4D 85 C0 75 ?? 48 85 C0 75 ?? 48 8B 4D ?? 48 85 C9 74 ?? 48 8B 01 41 8D 50 ?? FF 10 48 8B 45 ?? 4C 8B 44 24 ?? 4C 89 65 ?? EB ?? 49 89 40 ?? 48 8B 45 ?? 48 85 C0 74 ?? 4C 8B 44 24 ?? 4C 89 40 ?? 49 8B C4 4C 89 64 24 ?? 48 89 45 ?? 4D 8B C4 48 89 74 24 ?? 4D 85 C0 75 ?? 48 85 C0 0F 84 ?? ?? ?? ?? 4C 89 40 ?? 4C 89 64 24 ?? 4C 89 65 ?? E9 ?? ?? ?? ?? 49 89 40 ?? 48 8B 45 ?? 48 85 C0 0F 84 ?? ?? ?? ?? 4C 8B 44 24 ?? 4C 89 40 ?? 4C 89 64 24 ?? 4C 89 65 ?? E9 ?? ?? ?? ?? 0F 57 C0 4C 89 6D ?? 48 8D 53 ?? 4C 89 65 ?? 48 8D 4D ?? F3 0F 7F 45 ?? E8 ?? ?? ?? ?? 48 8D 55 ?? 48 8D 4D ?? E8 ?? ?? ?? ?? 84 C0 0F 84 ?? ?? ?? ?? 48 8B 55 ?? 48 8B 45 ?? 48 85 D2 75 ?? 48 85 C0 75 ?? 48 8B 4D ?? 48 85 C9 74 ?? 48 8B 01 BA 01 00 00 00 FF 10 EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 55 ?? 48 89 50 ?? 48 8B 45 ?? 48 8B 55 ?? 48 89 75 ?? 48 85 D2 75 ?? 48 85 C0 74 ?? EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 55 ?? 48 89 50 ?? 48 8B 54 24 ?? 48 8B 45 ?? 4C 89 6C 24 ?? 48 85 D2 75 ?? 48 85 C0 75 ?? 48 8B 4D ?? 48 85 C9 74 ?? 48 8B 01 BA 01 00 00 00 FF 10 48 8B 45 ?? 48 8B 54 24 ?? 4C 89 65 ?? EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 54 24 ?? 48 89 50 ?? 49 8B C4 49 8B D4 48 89 45 ?? 48 89 54 24 ?? 48 89 74 24 ?? 48 85 D2 75 ?? 48 85 C0 0F 84 ?? ?? ?? ?? 48 89 50 ?? 4C 89 64 24 ?? 4C 89 65 ?? E9 ?? ?? ?? ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 54 24 ?? 48 89 50 ?? 4C 89 64 24 ?? 4C 89 65 ?? E9 ?? ?? ?? ?? 48 8B 7D ?? BE FF FF FF 7F 48 85 FF 0F 84 ?? ?? ?? ?? 4C 8D 35 ?? ?? ?? ?? 48 8D 5F ?? 48 8B 3F 48 8D 44 24 ?? 48 3B D8 74 ?? 48 8B 45 ?? 48 39 43 ?? 74 ?? 48 8D 4C 24 ?? E8 ?? ?? ?? ?? EB ?? 48 8B 4C 24 ?? 48 8B 45 ?? 48 85 C9 75 ?? 48 85 C0 74 ?? EB ?? 48 89 41 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 4C 24 ?? 48 89 48 ?? 4C 89 65 ?? 4C 89 64 24 ?? 48 8B D3 48 8D 4C 24 ?? E8 ?? ?? ?? ?? 48 8B 45 ?? 4C 89 65 ?? 4C 89 6D ?? 48 85 C0 74 ?? 48 8D 4C 24 ?? 48 89 45 ?? 48 89 4D ?? 48 8D 4D ?? 48 89 48 ?? 48 8D 45 ?? 48 89 45 ?? EB ?? 48 8D 45 ?? 48 89 45 ?? 48 8D 44 24 ?? 48 89 45 ?? 48 8B 45 ?? 48 8D 4D ?? 0F 57 C0 48 89 45 ?? 49 8B D7 4C 89 6D ?? F3 0F 7F 45 ?? 4C 89 65 ?? E8 ?? ?? ?? ?? 48 8D 4D ?? E8 ?? ?? ?? ?? 48 8D 4D ?? E8 ?? ?? ?? ?? 49 8B 57 ?? 48 8D 4D ?? 0F 57 C0 4C 89 75 ?? 48 83 C2 40 4C 89 65 ?? F3 0F 7F 45 ?? E8 ?? ?? ?? ?? 48 8B 55 ?? 4C 8D 15 ?? ?? ?? ??",
+                address => _LEA_1407f6223_Address = address);
+            _scanner.Scan("LEA_1407f83d3", "48 8D 05 ?? ?? ?? ?? 44 38 24 ?? 0F 84 ?? ?? ?? ?? 48 8B 5D ?? 48 85 DB 0F 84 ?? ?? ?? ?? 48 8D 7B ?? 48 8B 1B 48 8D 44 24 ?? 48 3B F8 74 ?? 48 8B 45 ?? 48 39 47 ?? 74 ?? 48 8D 4C 24 ?? E8 ?? ?? ?? ?? EB ?? 48 8B 4C 24 ?? 48 8B 45 ?? 48 85 C9 75 ?? 48 85 C0 74 ?? EB ?? 48 89 41 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 4C 24 ?? 48 89 48 ?? 4C 89 65 ?? 4C 89 64 24 ?? 48 8B D7 48 8D 4C 24 ?? E8 ?? ?? ?? ?? 48 8B 45 ?? 4C 89 65 ?? 4C 89 6D ?? 48 85 C0 74 ?? 48 8D 4C 24 ?? 48 89 45 ?? 48 89 4D ?? 48 8D 4D ?? 48 89 48 ?? 48 8D 45 ?? 48 89 45 ?? EB ?? 48 8D 45 ?? 48 89 45 ?? 48 8D 44 24 ?? 48 89 45 ?? 48 8B 45 ?? 48 8D 55 ?? 49 8B CE 48 89 45 ?? E8 ?? ?? ?? ?? 48 8D 4D ?? E8 ?? ?? ?? ?? 48 85 DB 0F 85 ?? ?? ?? ?? 48 8B 55 ?? 48 8B 45 ?? 48 85 D2 75 ?? 48 85 C0 75 ?? 48 8B 4D ?? 48 85 C9 74 ?? 48 8B 01 BA 01 00 00 00 FF 10 EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 55 ?? 48 89 50 ?? 48 8B 45 ?? 48 8B 55 ?? 48 89 75 ?? 48 85 D2 75 ?? 48 85 C0 74 ?? EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 55 ?? 48 89 50 ?? 4C 8B 44 24 ?? 48 8B 45 ?? 4C 89 6C 24 ?? 4D 85 C0 75 ?? 48 85 C0 75 ?? 48 8B 4D ?? 48 85 C9 74 ?? 48 8B 01 41 8D 50 ?? FF 10 48 8B 45 ?? 4C 8B 44 24 ?? 4C 89 65 ?? EB ?? 49 89 40 ?? 48 8B 45 ?? 48 85 C0 74 ?? 4C 8B 44 24 ?? 4C 89 40 ?? 49 8B C4 4C 89 64 24 ?? 48 89 45 ?? 4D 8B C4 48 89 74 24 ?? 4D 85 C0 75 ?? 48 85 C0 0F 84 ?? ?? ?? ?? 4C 89 40 ?? 4C 89 64 24 ?? 4C 89 65 ?? E9 ?? ?? ?? ?? 49 89 40 ?? 48 8B 45 ?? 48 85 C0 0F 84 ?? ?? ?? ?? 4C 8B 44 24 ?? 4C 89 40 ?? 4C 89 64 24 ?? 4C 89 65 ?? E9 ?? ?? ?? ?? 0F 57 C0 4C 89 6D ?? 48 8D 53 ?? 4C 89 65 ?? 48 8D 4D ?? F3 0F 7F 45 ?? E8 ?? ?? ?? ?? 48 8D 55 ?? 48 8D 4D ?? E8 ?? ?? ?? ?? 84 C0 0F 84 ?? ?? ?? ?? 48 8B 55 ?? 48 8B 45 ?? 48 85 D2 75 ?? 48 85 C0 75 ?? 48 8B 4D ?? 48 85 C9 74 ?? 48 8B 01 BA 01 00 00 00 FF 10 EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 55 ?? 48 89 50 ?? 48 8B 45 ?? 48 8B 55 ?? 48 89 75 ?? 48 85 D2 75 ?? 48 85 C0 74 ?? EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 55 ?? 48 89 50 ?? 48 8B 54 24 ?? 48 8B 45 ?? 4C 89 6C 24 ?? 48 85 D2 75 ?? 48 85 C0 75 ?? 48 8B 4D ?? 48 85 C9 74 ?? 48 8B 01 BA 01 00 00 00 FF 10 48 8B 45 ?? 48 8B 54 24 ?? 4C 89 65 ?? EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 54 24 ?? 48 89 50 ?? 49 8B C4 49 8B D4 48 89 45 ?? 48 89 54 24 ?? 48 89 74 24 ?? 48 85 D2 75 ?? 48 85 C0 0F 84 ?? ?? ?? ?? 48 89 50 ?? 4C 89 64 24 ?? 4C 89 65 ?? E9 ?? ?? ?? ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 54 24 ?? 48 89 50 ?? 4C 89 64 24 ?? 4C 89 65 ?? E9 ?? ?? ?? ?? 48 8B 7D ?? 41 8B F4",
+                address => _LEA_1407f83d3_Address = address);
+            _scanner.Scan("LEA_1407f9327", "48 8D 0D ?? ?? ?? ?? F6 04 ?? 03",
+                address => _LEA_1407f9327_Address = address);
+            _scanner.Scan("LEA_1407f9ac3", "48 8D 05 ?? ?? ?? ?? 44 38 24 ?? 0F 84 ?? ?? ?? ?? 48 8B 5D ?? 48 85 DB 0F 84 ?? ?? ?? ?? 48 8D 7B ?? 48 8B 1B 48 8D 44 24 ?? 48 3B F8 74 ?? 48 8B 45 ?? 48 39 47 ?? 74 ?? 48 8D 4C 24 ?? E8 ?? ?? ?? ?? EB ?? 48 8B 4C 24 ?? 48 8B 45 ?? 48 85 C9 75 ?? 48 85 C0 74 ?? EB ?? 48 89 41 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 4C 24 ?? 48 89 48 ?? 4C 89 65 ?? 4C 89 64 24 ?? 48 8B D7 48 8D 4C 24 ?? E8 ?? ?? ?? ?? 48 8B 45 ?? 4C 89 65 ?? 4C 89 6D ?? 48 85 C0 74 ?? 48 8D 4C 24 ?? 48 89 45 ?? 48 89 4D ?? 48 8D 4D ?? 48 89 48 ?? 48 8D 45 ?? 48 89 45 ?? EB ?? 48 8D 45 ?? 48 89 45 ?? 48 8D 44 24 ?? 48 89 45 ?? 48 8B 45 ?? 48 8D 55 ?? 49 8B CE 48 89 45 ?? E8 ?? ?? ?? ?? 48 8D 4D ?? E8 ?? ?? ?? ?? 48 85 DB 0F 85 ?? ?? ?? ?? 48 8B 55 ?? 48 8B 45 ?? 48 85 D2 75 ?? 48 85 C0 75 ?? 48 8B 4D ?? 48 85 C9 74 ?? 48 8B 01 BA 01 00 00 00 FF 10 EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 55 ?? 48 89 50 ?? 48 8B 45 ?? 48 8B 55 ?? 48 89 75 ?? 48 85 D2 75 ?? 48 85 C0 74 ?? EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 55 ?? 48 89 50 ?? 4C 8B 44 24 ?? 48 8B 45 ?? 4C 89 6C 24 ?? 4D 85 C0 75 ?? 48 85 C0 75 ?? 48 8B 4D ?? 48 85 C9 74 ?? 48 8B 01 41 8D 50 ?? FF 10 48 8B 45 ?? 4C 8B 44 24 ?? 4C 89 65 ?? EB ?? 49 89 40 ?? 48 8B 45 ?? 48 85 C0 74 ?? 4C 8B 44 24 ?? 4C 89 40 ?? 49 8B C4 4C 89 64 24 ?? 48 89 45 ?? 4D 8B C4 48 89 74 24 ?? 4D 85 C0 75 ?? 48 85 C0 0F 84 ?? ?? ?? ?? 4C 89 40 ?? 4C 89 64 24 ?? 4C 89 65 ?? E9 ?? ?? ?? ?? 49 89 40 ?? 48 8B 45 ?? 48 85 C0 0F 84 ?? ?? ?? ?? 4C 8B 44 24 ?? 4C 89 40 ?? 4C 89 64 24 ?? 4C 89 65 ?? E9 ?? ?? ?? ?? 0F 57 C0 4C 89 6D ?? 48 8D 53 ?? 4C 89 65 ?? 48 8D 4D ?? F3 0F 7F 45 ?? E8 ?? ?? ?? ?? 48 8D 55 ?? 48 8D 4D ?? E8 ?? ?? ?? ?? 84 C0 0F 84 ?? ?? ?? ?? 48 8B 55 ?? 48 8B 45 ?? 48 85 D2 75 ?? 48 85 C0 75 ?? 48 8B 4D ?? 48 85 C9 74 ?? 48 8B 01 BA 01 00 00 00 FF 10 EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 55 ?? 48 89 50 ?? 48 8B 45 ?? 48 8B 55 ?? 48 89 75 ?? 48 85 D2 75 ?? 48 85 C0 74 ?? EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 55 ?? 48 89 50 ?? 48 8B 54 24 ?? 48 8B 45 ?? 4C 89 6C 24 ?? 48 85 D2 75 ?? 48 85 C0 75 ?? 48 8B 4D ?? 48 85 C9 74 ?? 48 8B 01 BA 01 00 00 00 FF 10 48 8B 45 ?? 48 8B 54 24 ?? 4C 89 65 ?? EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 54 24 ?? 48 89 50 ?? 49 8B C4 49 8B D4 48 89 45 ?? 48 89 54 24 ?? 48 89 74 24 ?? 48 85 D2 75 ?? 48 85 C0 0F 84 ?? ?? ?? ?? 48 89 50 ?? 4C 89 64 24 ?? 4C 89 65 ?? E9 ?? ?? ?? ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 54 24 ?? 48 89 50 ?? 4C 89 64 24 ?? 4C 89 65 ?? E9 ?? ?? ?? ?? 48 8B 7D ?? BE FF FF FF 7F 48 85 FF 0F 84 ?? ?? ?? ?? 4C 8D 35 ?? ?? ?? ?? 48 8D 5F ?? 48 8B 3F 48 8D 44 24 ?? 48 3B D8 74 ?? 48 8B 45 ?? 48 39 43 ?? 74 ?? 48 8D 4C 24 ?? E8 ?? ?? ?? ?? EB ?? 48 8B 4C 24 ?? 48 8B 45 ?? 48 85 C9 75 ?? 48 85 C0 74 ?? EB ?? 48 89 41 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 4C 24 ?? 48 89 48 ?? 4C 89 65 ?? 4C 89 64 24 ?? 48 8B D3 48 8D 4C 24 ?? E8 ?? ?? ?? ?? 48 8B 45 ?? 4C 89 65 ?? 4C 89 6D ?? 48 85 C0 74 ?? 48 8D 4C 24 ?? 48 89 45 ?? 48 89 4D ?? 48 8D 4D ?? 48 89 48 ?? 48 8D 45 ?? 48 89 45 ?? EB ?? 48 8D 45 ?? 48 89 45 ?? 48 8D 44 24 ?? 48 89 45 ?? 48 8B 45 ?? 48 8D 4D ?? 0F 57 C0 48 89 45 ?? 49 8B D7 4C 89 6D ?? F3 0F 7F 45 ?? 4C 89 65 ?? E8 ?? ?? ?? ?? 48 8D 4D ?? E8 ?? ?? ?? ?? 48 8D 4D ?? E8 ?? ?? ?? ?? 49 8B 57 ?? 48 8D 4D ?? 0F 57 C0 4C 89 75 ?? 48 83 C2 40 4C 89 65 ?? F3 0F 7F 45 ?? E8 ?? ?? ?? ?? 48 8B 55 ?? 4C 8D 0D ?? ?? ?? ??",
+                address => _LEA_1407f9ac3_Address = address);
+            _scanner.Scan("CMP_1407fa38f", "46 38 B4 ?? ?? ?? ?? ?? 0F 84 ?? ?? ?? ??",
+                address => _CMP_1407fa38f_Address = address);
+            _scanner.Scan("MOVZX_140800dbc", "0F B6 84 ?? ?? ?? ?? ?? FE C8 3C 01 0F 86 ?? ?? ?? ??",
+                address => _MOVZX_140800dbc_Address = address);
+            _scanner.Scan("MOVZX_140808efa", "44 0F B6 AC ?? ?? ?? ?? ?? 48 8B 45 ??",
+                address => _MOVZX_140808efa_Address = address);
+            _scanner.Scan("MOVZX_140809ad7", "0F B6 84 ?? ?? ?? ?? ?? FE C8 3C 01 48 8D 05 ?? ?? ?? ??",
+                address => _MOVZX_140809ad7_Address = address);
+            _scanner.Scan("MOVZX_1409ec814", "41 0F B6 84 ?? ?? ?? ?? ?? FE C8",
+                address => _MOVZX_1409ec814_Address = address);
+            _scanner.Scan("CMP_140ac4cb6", "44 38 B4 ?? ?? ?? ?? ?? 0F 85 ?? ?? ?? ??",
+                address => _CMP_140ac4cb6_Address = address);
+            _scanner.Scan("LEA_140acc3d0", "48 8D 05 ?? ?? ?? ?? 40 38 34 ?? 0F 85 ?? ?? ?? ?? 49 8D 8E ?? ?? ?? ??",
+                address => _LEA_140acc3d0_Address = address);
+            _scanner.Scan("MOVZX_140ad3048", "42 0F B6 B4 ?? ?? ?? ?? ?? 40 32 FF",
+                address => _MOVZX_140ad3048_Address = address);
+            _scanner.Scan("MOVZX_140ad37ee", "42 0F B6 B4 ?? ?? ?? ?? ?? 48 85 C0",
+                address => _MOVZX_140ad37ee_Address = address);
+            _scanner.Scan("LEA_140ada874", "48 8D 0D ?? ?? ?? ?? 48 8D 35 ?? ?? ?? ?? 48 8D 04 ??",
+                address => _LEA_140ada874_Address = address);
+            _scanner.Scan("LEA_140b5115b", "48 8D 05 ?? ?? ?? ?? 40 38 34 ?? 0F 85 ?? ?? ?? ?? 49 8D 8D ?? ?? ?? ??",
+                address => _LEA_140b5115b_Address = address);
+            _scanner.Scan("CMP_140b53c15", "45 38 A4 ?? ?? ?? ?? ?? 0F 84 ?? ?? ?? ??",
+                address => _CMP_140b53c15_Address = address);
+            _scanner.Scan("LEA_140b7daa1", "48 8D 05 ?? ?? ?? ?? 80 3C ?? 00 0F 85 ?? ?? ?? ?? 4C 8B B5 ?? ?? ?? ??",
+                address => _LEA_140b7daa1_Address = address);
+            _scanner.Scan("LEA_140b7ec53", "48 8D 05 ?? ?? ?? ?? 42 80 3C ?? 00 0F 85 ?? ?? ?? ?? 4C 8B 05 ?? ?? ?? ?? 4C 8D 15 ?? ?? ?? ?? 32 C0 45 32 E4",
+                address => _LEA_140b7ec53_Address = address);
+            _scanner.Scan("LEA_140b82003", "48 8D 05 ?? ?? ?? ?? 42 80 3C ?? 00 0F 85 ?? ?? ?? ?? 4C 8B 05 ?? ?? ?? ?? 4C 8D 15 ?? ?? ?? ?? 32 C0 45 33 F6",
+                address => _LEA_140b82003_Address = address);
+            _scanner.Scan("MOVZX_140d23838", "0F B6 84 ?? ?? ?? ?? ?? 0F B7 4F ?? 66 85 C9",
+                address => _MOVZX_140d23838_Address = address);
+            _scanner.Scan("LEA_140d73d5f", "48 8D 05 ?? ?? ?? ?? 0F B6 04 ?? 84 C0",
+                address => _LEA_140d73d5f_Address = address);
+            _scanner.ScanForData("CALL_14073e193 for FUN_140e35190 for LEA_140e3519a", "E8 ?? ?? ?? ?? 84 C0 74 ?? FE C8", 5, 1, 10,
+                address => _LEA_140e3519a_Address = address);
+            _scanner.Scan("MOVZX_14123d8c3", "0F B6 8C ?? ?? ?? ?? ?? 84 C9 0F 84 ?? ?? ?? ??",
+                address => _MOVZX_14123d8c3_Address = address);
+            
+            // For DAT_142226bfd
+            _scanner.Scan("MOVZX_1407ba194", "44 0F B6 BC ?? ?? ?? ?? ?? 0F B6 84 ?? ?? ?? ?? ??",
+                address => _MOVZX_1407ba194_Address = address);
+            _scanner.Scan("LEA_140ad5841", "48 8D 0D ?? ?? ?? ?? 33 F6 0F 57 C0",
+                address => _LEA_140ad5841_Address = address);
+            _scanner.Scan("LEA_140ad5bb6", "48 8D 0D ?? ?? ?? ?? 0F 57 C0 C7 45 ?? 00 00 00 00",
+                address => _LEA_140ad5bb6_Address = address);
+            _scanner.Scan("LEA_140b764d7", "48 8D 05 ?? ?? ?? ?? 80 3C ?? 01 0F 95 C0",
+                address => _LEA_140b764d7_Address = address);
+            _scanner.Scan("FUN_14bd94290 for LEA_14bd9429a", "0F B7 C1 48 8D 0C ?? 48 01 C9 48 8D 05 ?? ?? ?? ?? 0F B6 04 ??",
+                address => _LEA_14bd9429a_Address = address + 10);
+            
+            // For DAT_142226bfe
+            _scanner.Scan("MOVZX_1407ba19d", "0F B6 84 ?? ?? ?? ?? ?? 38 4D ??",
+                address => _MOVZX_1407ba19d_Address = address);
+            
+            // For DAT_142226c00
+            _scanner.Scan("LEA_1407ba233", "48 8D 86 ?? ?? ?? ?? 48 03 C3",
+                address => _LEA_1407ba233_Address = address);
+            
+            // For DAT_142226c04
+            _scanner.Scan("CMP_140e12a8d", "46 38 AC ?? ?? ?? ?? ?? 0F 84 ?? ?? ?? ?? 42 F7 84 ?? ?? ?? ?? ?? 00 00 08 00",
+                address => _CMP_140e12a8d_Address = address);
+            _scanner.Scan("CMP_140e12b6a", "80 BC ?? ?? ?? ?? ?? 64 0F 83 ?? ?? ?? ?? F6 C1 40",
+                address => _CMP_140e12b6a_Address = address);
+            
+            // For DAT_142226c06
+            _scanner.Scan("MOVZX_1409f1a37", "0F B6 84 ?? ?? ?? ?? ?? 48 8B CB 66 0F 6E C0",
+                address => _MOVZX_1409f1a37_Address = address);
+            
+            // For DAT_142226c07
+            _scanner.Scan("MOVZX_1400fa0d5", "42 0F B6 84 ?? ?? ?? ?? ?? FF C8 83 F8 0F 77 ?? 48 98 0F B6 84 ?? ?? ?? ?? ?? 8B 8C ?? ?? ?? ?? ?? 48 03 CA FF E1 42 80 BC ?? ?? ?? ?? ?? 01",
+                address => _MOVZX_1400fa0d5_Address = address);
+            _scanner.Scan("MOVZX_1407fac4b", "42 0F B6 84 ?? ?? ?? ?? ?? FF C8 83 F8 0F 0F 87 ?? ?? ?? ??",
+                address => _MOVZX_1407fac4b_Address = address);
+            _scanner.Scan("MOVZX_140883961", "0F B6 84 ?? ?? ?? ?? ?? 3C 0B 74 ?? 3C 02 0F 85 ?? ?? ?? ??",
+                address => _MOVZX_140883961_Address = address);
+            _scanner.Scan("MOVZX_14088476c", "0F B6 84 ?? ?? ?? ?? ?? 3C 0B 74 ?? 3C 02 75 ??",
+                address => _MOVZX_14088476c_Address = address);
+            _scanner.Scan("CMP_1408a8c77", "41 80 BC ?? ?? ?? ?? ?? 04",
+                address => _CMP_1408a8c77_Address = address);
+            _scanner.Scan("MOVZX_1408eb238", "41 0F B6 84 ?? ?? ?? ?? ?? 83 E8 0C 83 F8 01 0F 86 ?? ?? ?? ?? 41 0F B6 84 ?? ?? ?? ?? ??",
+                address => _MOVZX_1408eb238_Address = address);
+            _scanner.ScanForData("CALL_14091f24b for FUN_140911c80 for MOVZX_140911e42 and MOVZX_140911f5b", "E8 ?? ?? ?? ?? 84 C0 0F 84 ?? ?? ?? ?? B9 D6 00 00 00 E8 ?? ?? ?? ?? 83 F8 05 48 8B 45 ??",
+                5, 1, 0, address =>
+                {
+                    _MOVZX_140911e42_Address = address + 450;
+                    _MOVZX_140911f5b_Address = address + 731;
+                });
+            _scanner.ScanForData("CALL_140932186 for FUN_140925610 for MOVZX_1409257d2 and MOVZX_1409258eb", "E8 ?? ?? ?? ?? 84 C0 0F 84 ?? ?? ?? ?? B9 D6 00 00 00 E8 ?? ?? ?? ?? 83 F8 05 48 8B 85 ?? ?? ?? ??",
+                5, 1, 0, address =>
+                {
+                    _MOVZX_1409257d2_Address = address + 450;
+                    _MOVZX_1409258eb_Address = address + 731;
+                });
+            _scanner.Scan("MOVZX_1409ec823", "41 0F B6 84 ?? ?? ?? ?? ?? 3C 0E",
+                address => _MOVZX_1409ec823_Address = address);
+            _scanner.Scan("CMP_140e12342", "80 BC ?? ?? ?? ?? ?? 00 75 ?? 80 BC ?? ?? ?? ?? ?? 01",
+                address => _CMP_140e12342_Address = address);
+            _scanner.Scan("MOVZX_140e12850", "43 0F B6 84 ?? ?? ?? ?? ?? 83 F8 07",
+                address => _MOVZX_140e12850_Address = address);
+            _scanner.Scan("MOVZX_140e332ad", "42 0F B6 84 ?? ?? ?? ?? ?? FF C8 83 F8 0F 77 ?? 48 98 0F B6 84 ?? ?? ?? ?? ?? 8B 8C ?? ?? ?? ?? ?? 48 03 CA FF E1 B0 01",
+                address => _MOVZX_140e332ad_Address = address);
+            _scanner.Scan("MOVZX_140e3348d", "42 0F B6 84 ?? ?? ?? ?? ?? 83 C0 FE",
+                address => _MOVZX_140e3348d_Address = address);
+            
+            // For DAT_142226c0a
+            _scanner.Scan("MOVZX_1408eb24d", "41 0F B6 84 ?? ?? ?? ?? ?? 83 E8 0C 83 F8 01 0F 86 ?? ?? ?? ?? 41 0F BE 84 ?? ?? ?? ?? ??",
+                address => _MOVZX_1408eb24d_Address = address);
+            _scanner.Scan("MOVZX_140e332a2", "42 0F B6 84 ?? ?? ?? ?? ?? EB ?? 42 0F B6 84 ?? ?? ?? ?? ?? FF C8",
+                address => _MOVZX_140e332a2_Address = address);
+            _scanner.Scan("MOVZX_140e33482", "42 0F B6 84 ?? ?? ?? ?? ?? EB ?? 42 0F B6 84 ?? ?? ?? ?? ?? 83 C0 FE",
+                address => _MOVZX_140e33482_Address = address);
+            _scanner.Scan("MOVZX_140e347d8", "41 0F B6 84 ?? ?? ?? ?? ?? 2C 0C",
+                address => _MOVZX_140e347d8_Address = address);
+            
+            // For DAT_142226c0e
+            _scanner.Scan("CMP_1400f9485", "80 BC ?? ?? ?? ?? ?? 01 75 ?? 80 BC ?? ?? ?? ?? ?? 00",
+                address => _CMP_1400f9485_Address = address);
+            _scanner.Scan("CMP_1400fa0fb", "42 80 BC ?? ?? ?? ?? ?? 01 0F 85 ?? ?? ?? ??",
+                address => _CMP_1400fa0fb_Address = address);
+            _scanner.Scan("MOVZX_140e10715", "45 0F B6 BC ?? ?? ?? ?? ?? 41 8D 47 ??",
+                address => _MOVZX_140e10715_Address = address);
+            _scanner.Scan("CMP_140e110c9", "80 BC ?? ?? ?? ?? ?? 03 44 0F 29 54 24 ??",
+                address => _CMP_140e110c9_Address = address);
+            _scanner.Scan("MOVZX_140e11193", "0F B6 84 ?? ?? ?? ?? ?? FE C8 A8 FD",
+                address => _MOVZX_140e11193_Address = address);
+            _scanner.Scan("CMP_140e11dee", "0F B6 84 ?? ?? ?? ?? ?? FE C8 A8 FD",
+                address => _CMP_140e11dee_Address = address);
+            _scanner.Scan("CMP_140e1234c", "80 BC ?? ?? ?? ?? ?? 01 0F 85 ?? ?? ?? ?? F7 84 ?? ?? ?? ?? ?? 00 00 08 00",
+                address => _CMP_140e1234c_Address = address);
+            _scanner.Scan("CMP_140e1238f", "80 BC ?? ?? ?? ?? ?? 01 75 ?? 80 BC ?? ?? ?? ?? ?? 64",
+                address => _CMP_140e1238f_Address = address);
+            _scanner.Scan("CMP_140e13023", "40 38 B4 ?? ?? ?? ?? ?? 75 ?? 40 38 BC ?? ?? ?? ?? ??",
+                address => _CMP_140e13023_Address = address);
+            _scanner.Scan("CMP_140e33a92", "80 BC ?? ?? ?? ?? ?? 02 44 89 44 24 ??",
+                address => _CMP_140e33a92_Address = address);
+            _scanner.Scan("CMP_140e33aee", "80 BC ?? ?? ?? ?? ?? 01 75 ?? F7 84 ?? ?? ?? ?? ?? 00 00 08 00",
+                address => _CMP_140e33aee_Address = address);
+            _scanner.Scan("CMP_140e347c3", "41 80 BC ?? ?? ?? ?? ?? 01 75 ??",
+                address => _CMP_140e347c3_Address = address);
+            
+            // For DAT_142226c0f
+            _scanner.Scan("CMP_1400f948f", "80 BC ?? ?? ?? ?? ?? 00 76 ?? F7 84 ?? ?? ?? ?? ?? 00 00 08 00",
+                address => _CMP_1400f948f_Address = address);
+            _scanner.Scan("CMP_1400fa10a", "42 80 BC ?? ?? ?? ?? ?? 00 0F 86 ?? ?? ?? ??",
+                address => _CMP_1400fa10a_Address = address);
+            _scanner.Scan("CMP_140e11de0", "80 BC ?? ?? ?? ?? ?? 64 0F 83 ?? ?? ?? ?? 80 BC ?? ?? ?? ?? ?? 02",
+                address => _CMP_140e11de0_Address = address);
+            _scanner.Scan("CMP_140e12399", "80 BC ?? ?? ?? ?? ?? 64 72 ??",
+                address => _CMP_140e12399_Address = address);
+            _scanner.Scan("CMP_140e1302d", "40 38 BC ?? ?? ?? ?? ?? 76 ?? F7 84 ?? ?? ?? ?? ?? 00 00 08 00",
+                address => _CMP_140e1302d_Address = address);
+            _scanner.Scan("CMP_140e347ce", "41 38 84 ?? ?? ?? ?? ?? 77 ??",
+                address => _CMP_140e347ce_Address = address);
+            
+            // For DAT_142226c10
+            _scanner.Scan("TEST_1400f9499", "F7 84 ?? ?? ?? ?? ?? 00 00 08 00 75 ?? 41 BA DF 00 00 00",
+                address => _TEST_1400f9499_Address = address);
+            _scanner.Scan("TEST_1400fa119", "42 F7 84 ?? ?? ?? ?? ?? 00 00 08 00 0F 84 ?? ?? ?? ??",
+                address => _TEST_1400fa119_Address = address);
+            _scanner.Scan("TEST_1407703a6", "42 85 84 ?? ?? ?? ?? ?? 74 ?? 83 39 00",
+                address => _TEST_1407703a6_Address = address);
+            _scanner.Scan("LEA_14080e0c4", "48 8D 05 ?? ?? ?? ?? 8B 04 ?? 41 23 C5",
+                address => _LEA_14080e0c4_Address = address);
+            _scanner.Scan("TEST_1408a8c39", "41 F7 84 ?? ?? ?? ?? ?? 00 00 08 00",
+                address => _TEST_1408a8c39_Address = address);
+            _scanner.Scan("MOV_140e110a9", "8B AC ?? ?? ?? ?? ?? 4C 89 A4 24 ?? ?? ?? ?? 81 E5 FF FF FF 00",
+                address => _MOV_140e110a9_Address = address);
+            _scanner.Scan("TEST_140e1235a", "F7 84 ?? ?? ?? ?? ?? 00 00 08 00 0F 84 ?? ?? ?? ?? 45 0F B7 E0",
+                address => _TEST_140e1235a_Address = address);
+            _scanner.Scan("TEST_140e123a3", "F7 84 ?? ?? ?? ?? ?? 00 00 10 00 74 ?? 8B 06",
+                address => _TEST_140e123a3_Address = address);
+            _scanner.Scan("TEST_140e12a9b", "42 F7 84 ?? ?? ?? ?? ?? 00 00 08 00 74 ??",
+                address => _TEST_140e12a9b_Address = address);
+            _scanner.Scan("TEST_140e13037", "F7 84 ?? ?? ?? ?? ?? 00 00 08 00 75 ?? BA B2 03 00 00",
+                address => _TEST_140e13037_Address = address);
+            _scanner.Scan("TEST_140e33af8", "F7 84 ?? ?? ?? ?? ?? 00 00 08 00 74 ?? 0F BA E7 13",
+                address => _TEST_140e33af8_Address = address);
+            
+            // For DAT_142226c14
+            _scanner.Scan("TEST_1400fa0a0", "F7 84 ?? ?? ?? ?? ?? 00 03 00 00 E9 ?? ?? ?? ??",
+                address => _TEST_1400fa0a0_Address = address);
+            _scanner.Scan("TEST_1400fa1da", "42 F7 84 ?? ?? ?? ?? ?? 00 03 00 00",
+                address => _TEST_1400fa1da_Address = address);
+            _scanner.Scan("LEA_140ad7871", "48 8D 05 ?? ?? ?? ?? 8B 3C ?? 4C 89 7D ??",
+                address => _LEA_140ad7871_Address = address);
+            _scanner.Scan("MOV_140e33b47", "8B 9C ?? ?? ?? ?? ?? 8B 84 ?? ?? ?? ?? ?? 49 8B 8D ?? ?? ?? ??",
+                address => _MOV_140e33b47_Address = address);
+            
+            // For DAT_142226c18
+            _scanner.Scan("MOV_140e33b4e", "8B 84 ?? ?? ?? ?? ?? 49 8B 8D ?? ?? ?? ?? 89 9C 24 ?? ?? ?? ??",
+                address => _MOV_140e33b4e_Address = address);
+            
+            // For DAT_142226c1c
+            _scanner.Scan("MOVZX_1400fa087", "0F B6 84 ?? ?? ?? ?? ?? 2C 13 3C 01 77 ??",
+                address => _MOVZX_1400fa087_Address = address);
+            _scanner.Scan("MOVZX_1400fa1c7", "42 0F B6 84 ?? ?? ?? ?? ?? 2C 13",
+                address => _MOVZX_1400fa1c7_Address = address);
+            _scanner.Scan("CMP_1407ba25f", "80 BC ?? ?? ?? ?? ?? 0F 0F 85 ?? ?? ?? ??",
+                address => _CMP_1407ba25f_Address = address);
+            _scanner.Scan("TEST_1408a8c2f", "45 84 BC ?? ?? ?? ?? ?? 74 ??",
+                address => _TEST_1408a8c2f_Address = address);
+            _scanner.Scan("CMP_140ac516e", "80 BC ?? ?? ?? ?? ?? 12 41 0F 44 DF F7 C3 00 00 00 07 0F 85 ?? ?? ?? ??",
+                address => _CMP_140ac516e_Address = address);
+            _scanner.Scan("CMP_140ac59fa", "80 BC ?? ?? ?? ?? ?? 12 41 0F 44 DF F7 C3 00 00 00 07 75 ??",
+                address => _CMP_140ac59fa_Address = address);
+            _scanner.Scan("CMP_140e104af", "80 BC ?? ?? ?? ?? ?? 06 74 ??",
+                address => _CMP_140e104af_Address = address);
+            _scanner.Scan("CMP_140e106ea", "41 80 BC ?? ?? ?? ?? ?? 0D",
+                address => _CMP_140e106ea_Address = address);
+            _scanner.Scan("CMP_140e11083", "80 BC ?? ?? ?? ?? ?? 0D 75 ?? B8 00 00 08 00 48 81 C4 D0 00 00 00",
+                address => _CMP_140e11083_Address = address);
+            _scanner.Scan("MOVZX_140e111c8", "0F B6 94 ?? ?? ?? ?? ?? 80 FA 0E",
+                address => _MOVZX_140e111c8_Address = address);
+            _scanner.Scan("MOVZX_140e12668", "41 0F B6 84 ?? ?? ?? ?? ?? FF C8",
+                address => _MOVZX_140e12668_Address = address);
+            _scanner.Scan("CMP_140e12a2c", "43 80 BC ?? ?? ?? ?? ?? 12",
+                address => _CMP_140e12a2c_Address = address);
+            _scanner.Scan("CMP_140e33a71", "80 BC ?? ?? ?? ?? ?? 15 75 ?? 8B 43 ??",
+                address => _CMP_140e33a71_Address = address);
+            _scanner.Scan("MOVZX_140e33cd4", "0F B6 84 ?? ?? ?? ?? ?? 88 85 ?? ?? ?? ?? 44 89 44 24 ??",
+                address => _MOVZX_140e33cd4_Address = address);
+            _scanner.Scan("MOVZX_140e34851", "41 0F B6 8C ?? ?? ?? ?? ?? 41 88 8D ?? ?? ?? ??",
+                address => _MOVZX_140e34851_Address = address);
+            
+            // For DAT_142226c1d
+            _scanner.Scan("MOVZX_140e4035c", "0F B6 05 ?? ?? ?? ?? C3 48 8D 05 ?? ?? ?? ??",
+                address => _MOVZX_140e4035c_Address = address);
+            _scanner.Scan("MOVZX_140e40427", "0F B6 05 ?? ?? ?? ?? C3 66 85 C9",
+                address => _MOVZX_140e40427_Address = address);
 
-
-            /* _LEA_14bd93fea_Address
+            
+            /* _MOVZX_140e40427_Address
             _scanner.Scan("NAMEGE", "PATTERNGE",
                 address => ADRESSGE = address);
                 */
             // fsadfjsdjflksjfdokjsfdj
         }
-    }
-
-    private unsafe void FUN_140e3dc90_Custom(uint* param1)
-    {
-        Log.Information($"FUN_140e3dc90 called. Agidyne skill cost: {*(short*)((long)0x142226bf0 + 48 * 12 + 8)}");
-        
-        FUN_140e3dc90_Hook!.OriginalFunction(param1);
     }
     
     private unsafe long FUN_140e39b70_Custom(long param1)
@@ -561,662 +1097,1340 @@ public class Mod : ModBase // <= Do not Remove.
     
     private unsafe void AboardExclamationPoint()
     {
-        ConstructHook(_LEA_140105ab5_Address, [
+        // For DAT_142226bf0
+        CreateHook(_LEA_140105ab5_Address, [
             "use64",
             $"mov r10, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_TEST_140719e12_Address, CreateCustomInstructionSet([
+        CreateHook(_TEST_140719e12_Address, CreateCustomInstructionSet([
             "test dword [r12 + rcx*0x8], 0x10000"
         ], "r12", false));
         
-        ConstructHook(_LEA_14071bd02_Address, [
+        CreateHook(_LEA_14071bd02_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_MOV_14073a0ae_Address, CreateCustomInstructionSet([
+        CreateHook(_MOV_14073a0ae_Address, CreateCustomInstructionSet([
             "mov eax, dword [r12 + rcx*0x8]"
         ], "r12", false));
         
-        ConstructHook(_MOV_14073c18b_Address, CreateCustomInstructionSet([
+        CreateHook(_MOV_14073c18b_Address, CreateCustomInstructionSet([
             "mov eax, dword [r12 + rcx*0x8]"
         ], "r12", false));
         
-        ConstructHook(_TEST_14073c1df_Address, CreateCustomInstructionSet([
+        CreateHook(_TEST_14073c1df_Address, CreateCustomInstructionSet([
             "test dword [r12 + rax*0x8], 0x10000"
         ], "r12", false));
         
-        ConstructHook(_MOV_14073d50e_Address, CreateCustomInstructionSet([
+        CreateHook(_MOV_14073d50e_Address, CreateCustomInstructionSet([
             "mov eax, dword [r12 + rcx*0x8]"
         ], "r12", false));
         
-        ConstructHook(_LEA_1407521d7_Address, [
+        CreateHook(_LEA_1407521d7_Address, [
             "use64",
             $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140752496_Address, [
+        CreateHook(_LEA_140752496_Address, [
             "use64",
             $"mov r10, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_14075277d_Address, [
+        CreateHook(_LEA_14075277d_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140752df5_Address, [
+        CreateHook(_LEA_140752df5_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140752f6b_Address, [
+        CreateHook(_LEA_140752f6b_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140753697_Address, [
+        CreateHook(_LEA_140753697_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_1407536ca_Address, [
+        CreateHook(_LEA_1407536ca_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_14075384d_Address, [
+        CreateHook(_LEA_14075384d_Address, [
             "use64",
             $"mov r10, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_1407538ad_Address, [
+        CreateHook(_LEA_1407538ad_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_14075396b_Address, [
+        CreateHook(_LEA_14075396b_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140753af8_Address, [
+        CreateHook(_LEA_140753af8_Address, [
             "use64",
             $"mov r15, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140753c6a_Address, [
+        CreateHook(_LEA_140753c6a_Address, [
             "use64",
             $"mov r10, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140753dfd_Address, [
+        CreateHook(_LEA_140753dfd_Address, [
             "use64",
             $"mov r13, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140753fe4_Address, [
+        CreateHook(_LEA_140753fe4_Address, [
             "use64",
             $"mov r15, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_1407541de_Address, [
+        CreateHook(_LEA_1407541de_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140754479_Address, [
+        CreateHook(_LEA_140754479_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_14075e087_Address, [
+        CreateHook(_LEA_14075e087_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140771dfc_Address, [
+        CreateHook(_LEA_140771dfc_Address, [
             "use64",
             $"mov r8, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140771f54_Address, [
+        CreateHook(_LEA_140771f54_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_1407724e7_Address, [
+        CreateHook(_LEA_1407724e7_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_TEST_14077b9eb_Address, CreateCustomInstructionSet([
+        CreateHook(_TEST_14077b9eb_Address, CreateCustomInstructionSet([
             "test dword [r12 + rcx*0x8], 0x10000"
         ], "r12", false));
         
-        ConstructHook(_MOV_14077c383_Address, CreateCustomInstructionSet([
+        CreateHook(_MOV_14077c383_Address, CreateCustomInstructionSet([
             "mov eax, dword [r12 + rcx*0x8]"
         ], "r12", false));
         
-        ConstructHook(_LEA_1407afc81_Address, [
+        CreateHook(_LEA_1407afc81_Address, [
             "use64",
             $"mov r8, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_1407aff57_Address, [
+        CreateHook(_LEA_1407aff57_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_1407b076e_Address, [
+        CreateHook(_LEA_1407b076e_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_1407b40a0_Address, [
+        CreateHook(_LEA_1407b40a0_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_1407b81fb_Address, [
+        CreateHook(_LEA_1407b81fb_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_1407b9128_Address, [
+        CreateHook(_LEA_1407b9128_Address, [
             "use64",
             $"mov rbx, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140801ee2_Address, [
+        CreateHook(_LEA_140801ee2_Address, [
             "use64",
             $"mov r8, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140810877_Address, [
+        CreateHook(_LEA_140810877_Address, [
             "use64",
             $"mov r9, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140811470_Address, [
+        CreateHook(_LEA_140811470_Address, [
             "use64",
             $"mov r9, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_14081162d_Address, [
+        CreateHook(_LEA_14081162d_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_14085e961_Address, [
+        CreateHook(_LEA_14085e961_Address, [
             "use64",
             $"mov r15, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140868c5e_Address, [
+        CreateHook(_LEA_140868c5e_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140868f94_Address, [
+        CreateHook(_LEA_140868f94_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_14086fbc4_Address, [
+        CreateHook(_LEA_14086fbc4_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140870ad8_Address, [
+        CreateHook(_LEA_140870ad8_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140871e93_Address, [
+        CreateHook(_LEA_140871e93_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_MOV_1408ec3c4_Address, CreateCustomInstructionSet([
+        CreateHook(_MOV_1408ec3c4_Address, CreateCustomInstructionSet([
             "mov eax, dword [r12 + rcx*0x8]"
         ], "r12", false));
         
-        ConstructHook(_LEA_1409f0136_Address, [
+        CreateHook(_LEA_1409f0136_Address, [
             "use64",
             $"mov r9, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140acc910_Address, [
+        CreateHook(_LEA_140acc910_Address, [
             "use64",
             $"mov rbx, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140accb16_Address, [
+        CreateHook(_LEA_140accb16_Address, [
             "use64",
             $"mov rbx, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140accf19_Address, [
+        CreateHook(_LEA_140accf19_Address, [
             "use64",
             $"mov r15, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140acd266_Address, [
+        CreateHook(_LEA_140acd266_Address, [
             "use64",
             $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140acd6f0_Address, [
+        CreateHook(_LEA_140acd6f0_Address, [
             "use64",
             $"mov r14, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140ad431e_Address, [
+        CreateHook(_LEA_140ad431e_Address, [
             "use64",
             $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140ad4414_Address, [
+        CreateHook(_LEA_140ad4414_Address, [
             "use64",
             $"mov rdx, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140ad4431_Address, [
+        CreateHook(_LEA_140ad4431_Address, [
             "use64",
             $"mov rdx, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140ad44d5_Address, [
+        CreateHook(_LEA_140ad44d5_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140ad4615_Address, [
+        CreateHook(_LEA_140ad4615_Address, [
             "use64",
             $"mov rdx, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140ad474b_Address, [
+        CreateHook(_LEA_140ad474b_Address, [
             "use64",
             $"mov rdx, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140ad47c4_Address, [
+        CreateHook(_LEA_140ad47c4_Address, [
             "use64",
             $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140ad48e6_Address, [
+        CreateHook(_LEA_140ad48e6_Address, [
             "use64",
             $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140ad55fa_Address, [
+        CreateHook(_LEA_140ad55fa_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140ad5f65_Address, [
+        CreateHook(_LEA_140ad5f65_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140ad653a_Address, [
+        CreateHook(_LEA_140ad653a_Address, [
             "use64",
             $"mov rbx, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140ad6671_Address, [
+        CreateHook(_LEA_140ad6671_Address, [
             "use64",
             $"mov rdx, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140ad707f_Address, [
+        CreateHook(_LEA_140ad707f_Address, [
             "use64",
             $"mov r9, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140ad74cf_Address, [
+        CreateHook(_LEA_140ad74cf_Address, [
             "use64",
             $"mov r8, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140ad98cb_Address, [
+        CreateHook(_LEA_140ad98cb_Address, [
             "use64",
             $"mov r15, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140ad9b75_Address, [
+        CreateHook(_LEA_140ad9b75_Address, [
             "use64",
             $"mov r15, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140aedd10_Address, [
+        CreateHook(_LEA_140aedd10_Address, [
             "use64",
             $"mov r10, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140aee4f6_Address, [
+        CreateHook(_LEA_140aee4f6_Address, [
             "use64",
             $"mov r10, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140aee8d0_Address, [
+        CreateHook(_LEA_140aee8d0_Address, [
             "use64",
             $"mov r10, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140aeec6a_Address, [
+        CreateHook(_LEA_140aeec6a_Address, [
             "use64",
             $"mov r10, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140b0fd01_Address, [
+        CreateHook(_LEA_140b0fd01_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140b10242_Address, [
+        CreateHook(_LEA_140b10242_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140b6650b_Address, [
+        CreateHook(_LEA_140b6650b_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140b76766_Address, [
+        CreateHook(_LEA_140b76766_Address, [
             "use64",
             $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140b768bd_Address, [
+        CreateHook(_LEA_140b768bd_Address, [
             "use64",
             $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140b768fa_Address, [
+        CreateHook(_LEA_140b768fa_Address, [
             "use64",
             $"mov r8, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140b7691c_Address, [
+        CreateHook(_LEA_140b7691c_Address, [
             "use64",
             $"mov r8, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140b769ca_Address, [
+        CreateHook(_LEA_140b769ca_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140b76b0e_Address, [
+        CreateHook(_LEA_140b76b0e_Address, [
             "use64",
             $"mov r8, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140b76c62_Address, [
+        CreateHook(_LEA_140b76c62_Address, [
             "use64",
             $"mov r8, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140b76df8_Address, [
+        CreateHook(_LEA_140b76df8_Address, [
             "use64",
             $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140d23a05_Address, [
+        CreateHook(_LEA_140d23a05_Address, [
             "use64",
             $"mov r15, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140d6b75a_Address, [
+        CreateHook(_LEA_140d6b75a_Address, [
             "use64",
             $"mov r12, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140d6b845_Address, [
+        CreateHook(_LEA_140d6b845_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140d6b8f5_Address, [
+        CreateHook(_LEA_140d6b8f5_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140d6b925_Address, [
+        CreateHook(_LEA_140d6b925_Address, [
             "use64",
             $"mov r12, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140d6bd7d_Address, [
+        CreateHook(_LEA_140d6bd7d_Address, [
             "use64",
             $"mov r15, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140d73e5e_Address, [
+        CreateHook(_LEA_140d73e5e_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140dbaaa7_Address, [
+        CreateHook(_LEA_140dbaaa7_Address, [
             "use64",
             $"mov rdx, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140dbac38_Address, [
+        CreateHook(_LEA_140dbac38_Address, [
             "use64",
             $"mov r8, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140e0fb52_Address, [
+        CreateHook(_LEA_140e0fb52_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140e10232_Address, [
+        CreateHook(_LEA_140e10232_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_MOV_140e1072a_Address, CreateCustomInstructionSet([
+        CreateHook(_MOV_140e1072a_Address, CreateCustomInstructionSet([
             "mov edi, dword [r12 + rdx*0x8]"
         ], "r12", false));
         
-        ConstructHook(_LEA_140e1223f_Address, [
+        CreateHook(_LEA_140e1223f_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140e12590_Address, [
+        CreateHook(_LEA_140e12590_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_TEST_140e12933_Address, CreateCustomInstructionSet([
-            "test byte [r12 + r9*0x1], 0x40"
+        CreateHook(_TEST_140e12933_Address, CreateCustomInstructionSet([
+            "test byte [r14 + r12*0x1], 0x40"
         ], "r12", false));
         
-        
-        ConstructHook(_TEST_140e13177_Address, CreateCustomInstructionSet([
+        CreateHook(_TEST_140e13177_Address, CreateCustomInstructionSet([
             "test dword [r15 + r12*0x1], r14d"
         ], "r12", false));
         
-        ConstructHook(_MOV_140e1344d_Address, CreateCustomInstructionSet([
+        CreateHook(_MOV_140e1344d_Address, CreateCustomInstructionSet([
             "mov eax, dword [r15 + r12*0x1]"
         ], "r12", false));
         
-        ConstructHook(_LEA_140e139f1_Address, [
+        CreateHook(_LEA_140e139f1_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140e14347_Address, [
+        CreateHook(_LEA_140e14347_Address, [
             "use64",
             $"mov r9, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140e14502_Address, [
+        CreateHook(_LEA_140e14502_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140e1460a_Address, [
+        CreateHook(_LEA_140e1460a_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140e1492a_Address, [
+        CreateHook(_LEA_140e1492a_Address, [
             "use64",
             $"mov r10, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140e1498c_Address, [
+        CreateHook(_LEA_140e1498c_Address, [
             "use64",
             $"mov r10, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140e14b56_Address, [
+        CreateHook(_LEA_140e14b56_Address, [
             "use64",
             $"mov r13, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140e14dd5_Address, [
+        CreateHook(_LEA_140e14dd5_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_MOV_140e16e9e_Address, CreateCustomInstructionSet([
+        CreateHook(_MOV_140e16e9e_Address, CreateCustomInstructionSet([
             "mov ecx, dword [r12 + rax*0x8]"
         ], "r12", false));
         
-        ConstructHook(_LEA_140e1b1ef_Address, [
+        CreateHook(_LEA_140e1b1ef_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140e1b2bd_Address, [
+        CreateHook(_LEA_140e1b2bd_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140e1b2f3_Address, [
+        CreateHook(_LEA_140e1b2f3_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140e1b31b_Address, [
+        CreateHook(_LEA_140e1b31b_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140e1b3b1_Address, [
+        CreateHook(_LEA_140e1b3b1_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140e1c435_Address, [
+        CreateHook(_LEA_140e1c435_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140e32ef3_Address, [
+        CreateHook(_LEA_140e32ef3_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140e32f0a_Address, [
+        CreateHook(_LEA_140e32f0a_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140e32f47_Address, [
+        CreateHook(_LEA_140e32f47_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140e3318a_Address, [
+        CreateHook(_LEA_140e3318a_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140e3330a_Address, [
+        CreateHook(_LEA_140e3330a_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140e3342a_Address, [
+        CreateHook(_LEA_140e3342a_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_140e3344a_Address, [
+        CreateHook(_LEA_140e3344a_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_MOV_140e3358a_Address, CreateCustomInstructionSet([
+        CreateHook(_MOV_140e3358a_Address, CreateCustomInstructionSet([
             "mov eax, dword [r14 + r12*0x1]"
         ], "r12", false));
         
-        ConstructHook(_MOV_140e33933_Address, CreateCustomInstructionSet([
+        CreateHook(_MOV_140e33933_Address, CreateCustomInstructionSet([
             "mov eax, dword [rax + r12*0x1]"
         ], "r12", false));
         
-        ConstructHook(_MOV_140e34230_Address, CreateCustomInstructionSet([
+        CreateHook(_MOV_140e34230_Address, CreateCustomInstructionSet([
             "mov eax, dword [rax + r12*0x1]"
         ], "r12", false));
         
-        ConstructHook(_MOV_140e34438_Address, CreateCustomInstructionSet([
+        CreateHook(_MOV_140e34438_Address, CreateCustomInstructionSet([
             "mov eax, dword [rax + r12*0x1]"
         ], "r12", false));
         
-        ConstructHook(_MOV_140e34732_Address, CreateCustomInstructionSet([
+        CreateHook(_MOV_140e34732_Address, CreateCustomInstructionSet([
             "mov eax, dword [r14 + r12*0x1]"
         ], "r12", false));
         
-        ConstructHook(_MOV_140e34750_Address, CreateCustomInstructionSet([
+        CreateHook(_MOV_140e34750_Address, CreateCustomInstructionSet([
             "mov eax, dword [r14 + r12*0x1]"
         ], "r12", false));
         
-        ConstructHook(_MOV_140e34769_Address, CreateCustomInstructionSet([
+        CreateHook(_MOV_140e34769_Address, CreateCustomInstructionSet([
             "mov eax, dword [r14 + r12*0x1]"
         ], "r12", false));
         
-        ConstructHook(_MOV_140e34782_Address, CreateCustomInstructionSet([
+        CreateHook(_MOV_140e34782_Address, CreateCustomInstructionSet([
             "mov eax, dword [r14 + r12*0x1]"
         ], "r12", false));
         
-        ConstructHook(_LEA_140e3eb53_Address, [
+        CreateHook(_LEA_140e3eb53_Address, [
             "use64",
             $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_1417b4694_Address, [
+        CreateHook(_LEA_1417b4694_Address, [
             "use64",
             $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_14a8ab88f_Address, [
+        CreateHook(_LEA_14a8ab88f_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        ConstructHook(_LEA_14bd93fea_Address, [
+        CreateHook(_LEA_14bd93fea_Address, [
             "use64",
             $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
         ]);
         
-        // _LEA_14bd93fea_Address
+        // For DAT_142226bf4
+        CreateHook(_TEST_140764760_Address, CreateCustomInstructionSet([
+            "test byte [r12 + rax*0x8 + 0x4], 0x2"
+        ], "r12", false));
+        
+        CreateHook(_TEST_140ad2e25_Address, CreateCustomInstructionSet([
+            "test byte [r13 + r12*0x8 + 0x4], 0x2"
+        ], "r13", false));
+        
+        CreateHook(_LEA_140b110f8_Address, [
+            "use64",
+            $"mov r11, {(ulong)_pinnedSkillTblBytes.Pointer + 4}"
+        ]);
+        
+        CreateHook(_TEST_140b31f96_Address, CreateCustomInstructionSet([
+            "test byte [rax + r12*0x1 + 0x4], 0x2"
+        ], "r12", false));
+        
+        CreateHook(_TEST_140b32a54_Address, CreateCustomInstructionSet([
+            "test byte [rax + r12*0x1 + 0x4], 0x2"
+        ], "r12", false));
+        
+        CreateHook(_TEST_140b74509_Address, CreateCustomInstructionSet([
+            "test byte [rax + r12*0x1 + 0x4], 0x2"
+        ], "r12", false));
+        
+        CreateHook(_LEA_140e2bc7f_Address, [
+            "use64",
+            $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer + 4}"
+        ]);
+        
+        CreateHook(_LEA_14bc3c1d9_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 4}"
+        ]);
+        
+        // For DAT_142226bf6
+        CreateHook(_LEA_140101809_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 6}"
+        ]);
+        
+        CreateHook(_LEA_1401018a9_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 6}"
+        ]);
+        
+        CreateHook(_CMP_14077bd39_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + rax*0x8 + 0x6], 0x1"
+        ], "r12", false));
+        
+        CreateHook(_CMP_14077f324_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + rax*0x8 + 0x6], 0x1"
+        ], "r12", false));
+        
+        CreateHook(_CMP_14077ffe1_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + rax*0x8 + 0x6], 0x1"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140911e33_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + r9*0x8 + 0x6], 0x1"
+        ], "r12", false));
+        
+        CreateHook(_CMP_1409257c3_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + r9*0x8 + 0x6], 0x1"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140911f4c_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + rcx*0x8 + 0x6], 0x2"
+        ], "r12", false));
+        
+        CreateHook(_CMP_1409258dc_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + rcx*0x8 + 0x6], 0x2"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140950c7e_Address, CreateCustomInstructionSet([
+            "cmp byte [r13 + rax*0x8 + 0x6], 0x1"
+        ], "r13", false));
+        
+        CreateHook(_LEA_140e3335c_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 6}"
+        ]);
+        
+        // For DAT_142226bf7
+        CreateHook(_MOVZX_14073aa19_Address, CreateCustomInstructionSet([
+            "movzx ebx, byte [r12 + rcx*0x8 + 0x7]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_140ac6527_Address, CreateCustomInstructionSet([
+            "movzx edi, byte [rax + r12*0x1 + 0x7]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_140d07c3b_Address, CreateCustomInstructionSet([
+            "movzx ecx, byte [r12 + rax*0x8 + 0x7]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_140d0ac7c_Address, CreateCustomInstructionSet([
+            "movzx ecx, byte [r12 + rax*0x8 + 0x7]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_140e335c8_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r14 + r12*0x1 + 0x7]"
+        ], "r12", false));
+        
+        CreateHook(_LEA_14171e63b_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 7}"
+        ]);
+        
+        CreateHook(_MOVZX_14177b5ae_Address, CreateCustomInstructionSet([
+            "movzx ecx, byte [r12 + rax*0x8 + 0x7]"
+        ], "r12", false));
+        
+        CreateHook(_LEA_141780be8_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 7}"
+        ]);
+        
+        // For DAT_142226bfc
+        CreateHook(_CMP_14074211f_Address, CreateCustomInstructionSet([
+            "cmp byte [r13 + rcx*0x8 + 0xc], 0x0"
+        ], "r13", false));
+        
+        CreateHook(_CMP_140742760_Address, CreateCustomInstructionSet([
+            "cmp byte [r13 + rcx*0x8 + 0xc], 0x0"
+        ], "r13", false));
+        
+        CreateHook(_MOVZX_140770766_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r12 + rcx*0x8 + 0xc]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_140770911_Address, CreateCustomInstructionSet([
+            "movzx r12d, byte [r13 + rcx*0x8 + 0xc]"
+        ], "r13", false));
+        
+        CreateHook(_LEA_1407b8b36_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_CMP_1407ba966_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + rcx*0x8 + 0xc], dil"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_1407bde19_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r12 + rcx*0x8 + 0xc]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_1407be616_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r12 + rcx*0x8 + 0xc]"
+        ], "r12", false));
+        
+        CreateHook(_LEA_1407bf421_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_LEA_1407c84a2_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_LEA_1407e5a4e_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_LEA_1407ecfc0_Address, [
+            "use64",
+            $"mov rbx, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_LEA_1407ed288_Address, [
+            "use64",
+            $"mov rbx, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_LEA_1407ed9e6_Address, [
+            "use64",
+            $"mov r8, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_LEA_1407edc4a_Address, [
+            "use64",
+            $"mov r8, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_LEA_1407ee1dd_Address, [
+            "use64",
+            $"mov rdx, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_LEA_1407ee483_Address, [
+            "use64",
+            $"mov rdx, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_LEA_1407efdb8_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_LEA_1407f1a15_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_LEA_1407f2964_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_LEA_1407f32f4_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_LEA_1407f5514_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_LEA_1407f5a63_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_LEA_1407f6223_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_LEA_1407f6d53_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_LEA_1407f83d3_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_LEA_1407f9327_Address, [
+            "use64",
+            $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_LEA_1407f9ac3_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_CMP_1407fa38f_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + r15*0x8 + 0xc], r14b"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_140800dbc_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r12 + rax*0x8 + 0xc]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_140808efa_Address, CreateCustomInstructionSet([
+            "movzx r13d, byte [r12 + rcx*0x8 + 0xc]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_140809ad7_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r12 + rcx*0x8 + 0xc]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_1409ec814_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r12 + rcx*0x8 + 0xc]"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140ac4cb6_Address, CreateCustomInstructionSet([
+            "cmp byte [rax + r12*0x1 + 0xc], r14b"
+        ], "r12", false));
+        
+        CreateHook(_LEA_140acc3d0_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_MOVZX_140ad3048_Address, CreateCustomInstructionSet([
+            "movzx esi, byte [r13 + r12*0x8 + 0xc]"
+        ], "r13", false));
+        
+        CreateHook(_MOVZX_140ad37ee_Address, CreateCustomInstructionSet([
+            "movzx esi, byte [r13 + r12*0x8 + 0xc]"
+        ], "r13", false));
+        
+        CreateHook(_LEA_140ada874_Address, [
+            "use64",
+            $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_LEA_140b5115b_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_CMP_140b53c15_Address, CreateCustomInstructionSet([
+            "cmp byte [r14 + rcx*0x8 + 0xc], r12b"
+        ], "r14", false));
+        
+        CreateHook(_LEA_140b7daa1_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_LEA_140b7ec53_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_LEA_140b82003_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_MOVZX_140d23838_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [rcx + r12*0x1 + 0xc]"
+        ], "r12", false));
+        
+        CreateHook(_LEA_140d73d5f_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_LEA_140e3519a_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+        ]);
+        
+        CreateHook(_MOVZX_14123d8c3_Address, CreateCustomInstructionSet([
+            "movzx ecx, byte [rax + r12*0x1 + 0xc]"
+        ], "r12", false));
+        
+        // For DAT_142226bfd
+        CreateHook(_MOVZX_1407ba194_Address, CreateCustomInstructionSet([
+            "movzx r15d, byte [rbx + r12*0x1 + 0xd]"
+        ], "r12", false));
+        
+        CreateHook(_LEA_140ad5841_Address, [
+            "use64",
+            $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer + 13}"
+        ]);
+        
+        CreateHook(_LEA_140ad5bb6_Address, [
+            "use64",
+            $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer + 13}"
+        ]);
+        
+        CreateHook(_LEA_140b764d7_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 13}"
+        ]);
+        
+        CreateHook(_LEA_14bd9429a_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 13}"
+        ]);
+        
+        // For DAT_142226bfe
+        CreateHook(_MOVZX_1407ba19d_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [rbx + r12*0x1 + 0xe]"
+        ], "r12", false));
+        
+        // For DAT_142226c00
+        CreateHook(_LEA_1407ba233_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 16}"
+        ]);
+        
+        // For DAT_142226c04
+        CreateHook(_CMP_140e12a8d_Address, CreateCustomInstructionSet([
+            "cmp byte [rdi + r12*0x1 + 0x14], r13b"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140e12b6a_Address, CreateCustomInstructionSet([
+            "cmp byte [rdi + r12*0x1 + 0x14], 0x64"
+        ], "r12", false));
+        
+        // For DAT_142226c06
+        CreateHook(_MOVZX_1409f1a37_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r12 + rcx*0x8 + 0x16]"
+        ], "r12", false));
+        
+        // For DAT_142226c07
+        CreateHook(_MOVZX_1400fa0d5_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r12 + r8*0x8 + 0x17]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_1407fac4b_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r12 + r15*0x8 + 0x17]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_140883961_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r12 + rbx*0x8 + 0x17]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_14088476c_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r12 + rbx*0x8 + 0x17]"
+        ], "r12", false));
+        
+        CreateHook(_CMP_1408a8c77_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + rdx*0x8 + 0x17], 0x4"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_1408eb238_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r12 + rcx*0x8 + 0x17]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_140911e42_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r12 + r9*0x8 + 0x17]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_140911f5b_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r12 + rcx*0x8 + 0x17]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_1409257d2_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r12 + r9*0x8 + 0x17]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_1409258eb_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r12 + rcx*0x8 + 0x17]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_1409ec823_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r12 + rcx*0x8 + 0x17]"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140e12342_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + rbx*0x8 + 0x17], 0x0"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_140e12850_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r14 + r12*0x1 + 0x17]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_140e332ad_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r12 + r8*0x8 + 0x17]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_140e3348d_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r12 + r8*0x8 + 0x17]"
+        ], "r12", false));
+        
+        // For DAT_142226c0a
+        CreateHook(_MOVZX_1408eb24d_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r12 + rcx*0x8 + 0x1a]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_140e332a2_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r12 + r8*0x8 + 0x1a]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_140e33482_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r12 + r8*0x8 + 0x1a]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_140e347d8_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r14 + r12*0x1 + 0x1a]"
+        ], "r12", false));
+        
+        // For DAT_142226c0e
+        CreateHook(_CMP_1400f9485_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + rcx*0x8 + 0x1e], 0x1"
+        ], "r12", false));
+        
+        CreateHook(_CMP_1400fa0fb_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + r8*0x8 + 0x1e], 0x1"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_140e10715_Address, CreateCustomInstructionSet([
+            "movzx r15d, byte [r13 + rdx*0x8 + 0x1e]"
+        ], "r13", false));
+        
+        CreateHook(_CMP_140e110c9_Address, CreateCustomInstructionSet([
+            "cmp byte [rax + r12*0x1 + 0x1e], 0x3"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_140e11193_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [rax + r12*0x1 + 0x1e]"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140e11dee_Address, CreateCustomInstructionSet([
+            "cmp byte [rax + r12*0x1 + 0x1e], 0x2"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140e1234c_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + rbx*0x8 + 0x1e], 0x1"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140e1238f_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + rbx*0x8 + 0x1e], 0x1"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140e13023_Address, CreateCustomInstructionSet([
+            "cmp byte [rax + r12*0x1 + 0x1e], sil"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140e33a92_Address, CreateCustomInstructionSet([
+            "cmp byte [rcx + r12*0x1 + 0x1e], 0x2"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140e33aee_Address, CreateCustomInstructionSet([
+            "cmp byte [rcx + r12*0x1 + 0x1e], 0x1"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140e347c3_Address, CreateCustomInstructionSet([
+            "cmp byte [r14 + r12*0x1 + 0x1e], 0x1"
+        ], "r12", false));
+        
+        // For DAT_142226c0f
+        CreateHook(_CMP_1400f948f_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + rcx*0x8 + 0x1f], 0x0"
+        ], "r12", false));
+        
+        CreateHook(_CMP_1400fa10a_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + r8*0x8 + 0x1f], 0x0"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140e11de0_Address, CreateCustomInstructionSet([
+            "cmp byte [rax + r12*0x1 + 0x1f], 0x64"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140e12399_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + rbx*0x8 + 0x1f], 0x64"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140e1302d_Address, CreateCustomInstructionSet([
+            "cmp byte [rax + r12*0x1 + 0x1f], dil"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140e347ce_Address, CreateCustomInstructionSet([
+            "cmp byte [r14 + r12*0x1 + 0x1f], al"
+        ], "r12", false));
+        
+        // For DAT_142226c10
+        CreateHook(_TEST_1400f9499_Address, CreateCustomInstructionSet([
+            "test dword [r12 + rcx*0x8 + 0x20], 0x80000"
+        ], "r12", false));
+        
+        CreateHook(_TEST_1400fa119_Address, CreateCustomInstructionSet([
+            "test dword [r12 + r8*0x8 + 0x20], 0x80000"
+        ], "r12", false));
+        
+        CreateHook(_TEST_1407703a6_Address, CreateCustomInstructionSet([
+            "test dword [rbx + r12*0x1 + 0x20], eax"
+        ], "r12", false));
+        
+        CreateHook(_LEA_14080e0c4_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 32}"
+        ]);
+        
+        CreateHook(_TEST_1408a8c39_Address, CreateCustomInstructionSet([
+            "test dword [r12 + rdx*0x8 + 0x20], 0x80000"
+        ], "r12", false));
+        
+        CreateHook(_MOV_140e110a9_Address, CreateCustomInstructionSet([
+            "mov ebp, dword [rax + r12*0x1 + 0x20]"
+        ], "r12", false));
+        
+        CreateHook(_TEST_140e1235a_Address, CreateCustomInstructionSet([
+            "test dword [r12 + rbx*0x8 + 0x20], 0x80000"
+        ], "r12", false));
+        
+        CreateHook(_TEST_140e123a3_Address, CreateCustomInstructionSet([
+            "test dword [r12 + rbx*0x8 + 0x20], 0x100000"
+        ], "r12", false));
+        
+        CreateHook(_TEST_140e12a9b_Address, CreateCustomInstructionSet([
+            "test dword [rdi + r12*0x1 + 0x20], 0x80000"
+        ], "r12", false));
+        
+        CreateHook(_TEST_140e13037_Address, CreateCustomInstructionSet([
+            "test dword [rax + r12*0x1 + 0x20], 0x80000"
+        ], "r12", false));
+        
+        CreateHook(_TEST_140e33af8_Address, CreateCustomInstructionSet([
+            "test dword [rcx + r12*0x1 + 0x20], 0x80000"
+        ], "r12", false));
+        
+        // For DAT_142226c14
+        CreateHook(_TEST_1400fa0a0_Address, CreateCustomInstructionSet([
+            "test dword [r12 + rcx*0x8 + 0x24], 0x300"
+        ], "r12", false));
+        
+        CreateHook(_TEST_1400fa1da_Address, CreateCustomInstructionSet([
+            "test dword [r12 + r8*0x8 + 0x24], 0x300"
+        ], "r12", false));
+        
+        CreateHook(_LEA_140ad7871_Address, [
+            "use64",
+            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 36}"
+        ]);
+        
+        CreateHook(_MOV_140e33b47_Address, CreateCustomInstructionSet([
+            "mov ebx, dword [rax + r12*0x1 + 0x24]"
+        ], "r12", false));
+        
+        // For DAT_142226c18
+        CreateHook(_MOV_140e33b4e_Address, CreateCustomInstructionSet([
+            "mov eax, dword [rax + r12*0x1 + 0x28]"
+        ], "r12", false));
+        
+        // For DAT_142226c1c
+        CreateHook(_MOVZX_1400fa087_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r12 + rcx*0x8 + 0x2c]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_1400fa1c7_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r12 + r8*0x8 + 0x2c]"
+        ], "r12", false));
+        
+        CreateHook(_CMP_1407ba25f_Address, CreateCustomInstructionSet([
+            "cmp byte [rbx + r12*0x1 + 0x2c], 0xf"
+        ], "r12", false));
+        
+        CreateHook(_TEST_1408a8c2f_Address, CreateCustomInstructionSet([
+            "test byte [r12 + rdx*0x8 + 0x2c], r15b"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140ac516e_Address, CreateCustomInstructionSet([
+            "cmp byte [rax + r12*0x1 + 0x2c], 0x12"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140ac59fa_Address, CreateCustomInstructionSet([
+            "cmp byte [rax + r12*0x1 + 0x2c], 0x12"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140e104af_Address, CreateCustomInstructionSet([
+            "cmp byte [rcx + r12*0x1 + 0x2c], 0x6"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140e106ea_Address, CreateCustomInstructionSet([
+            "cmp byte [r13 + rdx*0x8 + 0x2c], 0xd"
+        ], "r13", false));
+        
+        CreateHook(_CMP_140e11083_Address, CreateCustomInstructionSet([
+            "cmp byte [rax + r12*0x1 + 0x2c], 0xd"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_140e111c8_Address, CreateCustomInstructionSet([
+            "movzx edx, byte [rcx + r12*0x1 + 0x2c]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_140e12668_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r14 + r12*0x1 + 0x2c]"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140e12a2c_Address, CreateCustomInstructionSet([
+            "cmp byte [r14 + r12*0x1 + 0x2c], 0x12"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140e33a71_Address, CreateCustomInstructionSet([
+            "cmp byte [rcx + r12*0x1 + 0x2c], 0x15"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_140e33cd4_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [rax + r12*0x1 + 0x2c]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_140e34851_Address, CreateCustomInstructionSet([
+            "movzx ecx, byte [r14 + r12*0x1 + 0x2c]"
+        ], "r12", false));
+        
+        // For DAT_142226c1d
+        CreateHook(_MOVZX_140e4035c_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r12 + 0x2d]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_140e40427_Address, CreateCustomInstructionSet([
+            "movzx eax, byte [r12 + 0x2d]"
+        ], "r12", false));
+        
+        // _MOVZX_140e40427_Address
         
         // fsadfjsdjflksjfdokjsfdj
     }
     
-    private void ConstructHook(long address, string[] function)
+    private void CreateHook(long address, string[] function)
     {
         _asmHooks.Add(_hooks!.CreateAsmHook(function, address, AsmHookBehaviour.DoNotExecuteOriginal).Activate());
     }
