@@ -455,6 +455,27 @@ public class Mod : ModBase // <= Do not Remove.
     private nint _LEA_140fb8094_Address;
     private nint _LEA_141780647_Address;
     
+    // For DATx142260b81
+    private nint _CMP_14077033f_Address;
+    private nint _CMP_140883791_Address;
+    private nint _CMP_14088459c_Address;
+    private nint _CMP_1409ec802_Address;
+    private nint _CMP_140d07c26_Address;
+    private nint _CMP_140d0ac66_Address;
+    private nint _LEA_140e35393_Address;
+    private nint _CMP_14177b599_Address;
+    
+    // For DATx142260b82
+    private nint _MOVZX_140fa4eba_Address;
+    private nint _CMP_140fa4ec6_Address;
+    private nint _LEA_140faf2c4_Address;
+    private nint _LEA_140faf7db_Address;
+    private nint _MOVZX_140fb0100_Address;
+    private nint _MOVZX_140fb031f_Address;
+    private nint _MOVZX_140fb0c82_Address;
+    private nint _MOVZX_140fb0e30_Address;
+    private nint _LEA_140fb3803_Address;
+    
     
     private readonly ScannerWrapper _scanner;
 
@@ -1259,9 +1280,47 @@ public class Mod : ModBase // <= Do not Remove.
                 address => _LEA_140fb8094_Address = address);
             _scanner.Scan("LEA_141780647", "48 8D 0D ?? ?? ?? ?? 80 7C ?? ?? 01",
                 address => _LEA_141780647_Address = address);
+            
+            // For DATx142260b81
+            _scanner.Scan("CMP_14077033f", "80 BC ?? ?? ?? ?? ?? 00 0F 85 ?? ?? ?? ?? 0F B7 D1",
+                address => _CMP_14077033f_Address = address);
+            _scanner.Scan("CMP_140883791", "45 38 A4 ?? ?? ?? ?? ?? 75 ?? 40 B6 01",
+                address => _CMP_140883791_Address = address);
+            _scanner.Scan("CMP_14088459c", "45 38 A4 ?? ?? ?? ?? ?? 75 ?? 40 B7 01",
+                address => _CMP_14088459c_Address = address);
+            _scanner.Scan("CMP_1409ec802", "41 80 BC ?? ?? ?? ?? ?? 00 75 ?? 48 8D 0C ??",
+                address => _CMP_1409ec802_Address = address);
+            _scanner.Scan("CMP_140d07c26", "80 BC ?? ?? ?? ?? ?? 00 0F 85 ?? ?? ?? ?? 48 8D 04 ?? 48 03 C0 0F B6 8C ?? ?? ?? ?? ?? 83 E9 01 74 ?? 83 F9 01 0F 85 ?? ?? ?? ?? 41 BE 1C 01 00 00",
+                address => _CMP_140d07c26_Address = address);
+            _scanner.Scan("CMP_140d0ac66", "41 80 BC ?? ?? ?? ?? ?? 00 0F 85 ?? ?? ?? ?? 48 8D 04 ??",
+                address => _CMP_140d0ac66_Address = address);
+            _scanner.ScanForData("CALL_14073e946 for FUN_140e35390 for LEA_140e35393", "E8 ?? ?? ?? ?? 84 C0 75 ?? 0F B7 8E ?? ?? ?? ?? E8 ?? ?? ?? ?? 84 C0 0F 85 ?? ?? ?? ??",
+                5, 1, 0, address => _LEA_140e35393_Address = address + 3);
+            _scanner.Scan("CMP_14177b599", "80 BC ?? ?? ?? ?? ?? 00 0F 85 ?? ?? ?? ?? 48 8D 04 ?? 48 03 C0 0F B6 8C ?? ?? ?? ?? ?? 83 E9 01 74 ?? 83 F9 01 0F 85 ?? ?? ?? ?? BF 1C 01 00 00",
+                address => _CMP_14177b599_Address = address);
+            
+            // For DATx142260b82
+            _scanner.Scan("MOVZX_140fa4eba", "44 0F B6 94 ?? ?? ?? ?? ?? 0F B7 D0",
+                address => _MOVZX_140fa4eba_Address = address);
+            _scanner.Scan("CMP_140fa4ec6", "44 38 94 ?? ?? ?? ?? ?? 75 ?? 41 FF C0",
+                address => _CMP_140fa4ec6_Address = address);
+            _scanner.Scan("LEA_140faf2c4", "48 8D 0D ?? ?? ?? ?? F3 0F 10 25 ?? ?? ?? ??",
+                address => _LEA_140faf2c4_Address = address);
+            _scanner.Scan("LEA_140faf7db", "4C 8D 0D ?? ?? ?? ?? 41 0F B7 D3",
+                address => _LEA_140faf7db_Address = address);
+            _scanner.Scan("MOVZX_140fb0100", "45 0F B6 94 ?? ?? ?? ?? ?? 83 FA FF",
+                address => _MOVZX_140fb0100_Address = address);
+            _scanner.Scan("MOVZX_140fb031f", "44 0F B6 9C ?? ?? ?? ?? ?? 83 FA FF",
+                address => _MOVZX_140fb031f_Address = address);
+            _scanner.Scan("MOVZX_140fb0c82", "45 0F B6 84 ?? ?? ?? ?? ?? 83 FA FF",
+                address => _MOVZX_140fb0c82_Address = address);
+            _scanner.Scan("MOVZX_140fb0e30", "45 0F B6 84 ?? ?? ?? ?? ?? 45 85 C0",
+                address => _MOVZX_140fb0e30_Address = address);
+            _scanner.Scan("LEA_140fb3803", "4C 8D 0D ?? ?? ?? ?? 0F B7 D7",
+                address => _LEA_140fb3803_Address = address);
 
             
-            /* _LEA_141780647_Address
+            /* _LEA_140fb3803_Address
             _scanner.Scan("NAMEGE", "PATTERNGE",
                 address => ADRESSGE = address);
                 */
@@ -2888,8 +2947,82 @@ public class Mod : ModBase // <= Do not Remove.
             $"mov rcx, {_customInstructionSetPointer}"
         ]);
         
+        // For DATx142260b81
+        CreateHook(_CMP_14077033f_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + rax*0x8 + 0x1], 0x0"
+        ], "r12", false));
         
-        // _LEA_141780647_Address
+        CreateHook(_CMP_140883791_Address, CreateCustomInstructionSet([
+            "cmp byte [r13 + rax*0x8 + 0x1], r12b"
+        ], "r13", false));
+        
+        CreateHook(_CMP_14088459c_Address, CreateCustomInstructionSet([
+            "cmp byte [r13 + rax*0x8 + 0x1], r12b"
+        ], "r13", false));
+        
+        CreateHook(_CMP_1409ec802_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + rcx*0x8 + 0x1], 0x0"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140d07c26_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + rax*0x8 + 0x1], 0x0"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140d0ac66_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + rcx*0x8 + 0x1], 0x0"
+        ], "r12", false));
+        
+        CreateHook(_LEA_140e35393_Address, [
+            "use64",
+            $"mov rcx, {_customInstructionSetPointer + 1}"
+        ]);
+        
+        CreateHook(_CMP_14177b599_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + rbx*0x8 + 0x1], 0x0"
+        ], "r12", false));
+        
+        // For DATx142260b82
+        CreateHook(_MOVZX_140fa4eba_Address, CreateCustomInstructionSet([
+            "movzx r10d, byte [r12 + rbp*0x8 + 0x2]"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140fa4ec6_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + rdx*0x8 + 0x2], r10b"
+        ], "r12", false));
+        
+        CreateHook(_LEA_140faf2c4_Address, [
+            "use64",
+            $"mov rcx, {_customInstructionSetPointer + 2}"
+        ]);
+        
+        CreateHook(_LEA_140faf7db_Address, [
+            "use64",
+            $"mov r9, {_customInstructionSetPointer + 2}"
+        ]);
+        
+        CreateHook(_MOVZX_140fb0100_Address, CreateCustomInstructionSet([
+            "movzx r10d, byte [r12 + rcx*0x8 + 0x2]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_140fb031f_Address, CreateCustomInstructionSet([
+            "movzx r11d, byte [r12 + rcx*0x8 + 0x2]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_140fb0c82_Address, CreateCustomInstructionSet([
+            "movzx r8d, byte [r12 + rax*0x8 + 0x2]"
+        ], "r12", false));
+        
+        CreateHook(_MOVZX_140fb0e30_Address, CreateCustomInstructionSet([
+            "movzx r8d, byte [r12 + rax*0x8 + 0x2]"
+        ], "r12", false));
+        
+        CreateHook(_LEA_140fb3803_Address, [
+            "use64",
+            $"mov r9, {_customInstructionSetPointer + 2}"
+        ]);
+        
+        
+        // _LEA_140fb3803_Address
         
         // fsadfjsdjflksjfdokjsfdj
     }
