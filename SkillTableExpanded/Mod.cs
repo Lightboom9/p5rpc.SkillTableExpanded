@@ -49,14 +49,25 @@ public class Mod : ModBase // <= Do not Remove.
     /// The configuration of the currently executing mod.
     /// </summary>
     private readonly IModConfig _modConfig;
+
+
+    private const uint SkillElementLength = 8;
+    private const uint ActiveSkillDataLength = 48;
+    
+    private const uint VanillaSkillElementsLength = 1056;
+    private const uint VanillaActiveSkillDataLength = 800;
+
+    private const uint ExpandedSkillElementsLength = 2500;
+    private const uint ExpandedActiveSkillDataLength = 2500;
     
     
     [Function(CallingConventions.Microsoft)]
     private unsafe delegate long FUN_140e39b70(long param1);
     private IHook<FUN_140e39b70>? FUN_140e39b70_Hook;
     
-    private nint _DAT_142226bf0_Address; // Starting address of SKILL.TBL in memory
-
+    // Segment 1
+    private nint _DAT_142226bf0_Address; // Starting address of Segment 1 of SKILL.TBL in memory
+    
     // For DAT_142226bf0
     private nint _LEA_140105ab5_Address;
     private nint _TEST_140719e12_Address;
@@ -383,13 +394,81 @@ public class Mod : ModBase // <= Do not Remove.
     private nint _MOVZX_140e4035c_Address;
     private nint _MOVZX_140e40427_Address;
     
+    // Segment 0
+    private nint _DAT_142260b80_Address; // Starting address of Segment 0 of SKILL.TBL in memory
+    
+    // For DATx142260b80
+    private nint _LEA_14071a1ce_Address;
+    private nint _LEA_14071a445_Address;
+    private nint _LEA_14073acb7_Address;
+    private nint _CMP_14073ad65_Address;
+    private nint _LEA_14073ae82_Address;
+    private nint _CMP_14073b083_Address;
+    private nint _LEA_14073b110_Address;
+    private nint _CMP_14076476f_Address;
+    private nint _MOVSX_14076487d_Address;
+    private nint _LEA_1407b9f92_Address;
+    private nint _MOVSX_1407fb6f3_Address;
+    private nint _MOVSX_1407fb805_Address;
+    private nint _MOVSX_1407fdee4_Address;
+    private nint _MOVSX_1407fdf5a_Address;
+    private nint _LEA_14080095e_Address;
+    private nint _LEA_140801ef4_Address;
+    private nint _MOVSX_140807419_Address;
+    private nint _MOVSX_140808e2a_Address;
+    private nint _LEA_140815aab_Address;
+    private nint _MOVSX_1408eb262_Address;
+    private nint _CMP_140911f79_Address;
+    private nint _CMP_140925909_Address;
+    private nint _LEA_140911fb8_Address;
+    private nint _LEA_140925948_Address;
+    private nint _MOVSX_140ac50f3_Address;
+    private nint _MOVSX_140ac5983_Address;
+    private nint _LEA_140ad202a_Address;
+    private nint _LEA_140ad241e_Address;
+    private nint _LEA_140ad2745_Address;
+    private nint _LEA_140b31af6_Address;
+    private nint _LEA_140b31fa5_Address;
+    private nint _LEA_140b325d8_Address;
+    private nint _LEA_140b32a62_Address;
+    private nint _CMP_140b7469f_Address;
+    private nint _MOVSX_140b748c0_Address;
+    private nint _MOVSX_140b74973_Address;
+    private nint _CMP_140d71d6a_Address;
+    private nint _CMP_140d72d0c_Address;
+    private nint _CMP_140d73094_Address;
+    private nint _CMP_140e16eab_Address;
+    private nint _MOVSX_140e16f21_Address;
+    private nint _LEA_140e16f74_Address;
+    private nint _LEA_140e32879_Address;
+    private nint _LEA_140e32cd6_Address;
+    private nint _LEA_140e33076_Address;
+    private nint _LEA_140e331d6_Address;
+    private nint _LEA_140e3eb73_Address;
+    private nint _LEA_140e4051a_Address;
+    private nint _LEA_140fae067_Address;
+    private nint _MOVSX_140fb00f7_Address;
+    private nint _MOVSX_140fb0317_Address;
+    private nint _MOVSX_140fb0c79_Address;
+    private nint _MOVSX_140fb0e20_Address;
+    private nint _LEA_140fb3c8f_Address;
+    private nint _LEA_140fb8094_Address;
+    private nint _LEA_141780647_Address;
+    
     
     private readonly ScannerWrapper _scanner;
 
     private readonly List<string> _customInstructionSetList = new();
     private readonly List<IAsmHook> _asmHooks = new();
-    private readonly Pinnable<byte> _pinnedSkillTblBytes = new(new byte[800 * 48]);
-    private long _customSkillDataOffset;
+    
+    private readonly Pinnable<byte> _pinnedSkillElements = new(new byte[ExpandedSkillElementsLength * SkillElementLength]);
+    private long _skillElementsOffset;
+    
+    private readonly Pinnable<byte> _pinnedActiveSkillData = new(new byte[ExpandedActiveSkillDataLength * ActiveSkillDataLength]);
+    private long _activeSkillDataOffset;
+
+    private long _customInstructionSetPointer;
+    private long _customInstructionSetOffset;
 
     public Mod(ModContext context)
     {
@@ -423,6 +502,7 @@ public class Mod : ModBase // <= Do not Remove.
             // ======================================================
             //                        DATA
             // ======================================================
+            // Segment 1
             _scanner.ScanForData("DAT_142226bf0", "48 8D 05 ?? ?? ?? ?? 4C 03 CD", 7, 3, 0,
                 address => _DAT_142226bf0_Address = address);
             
@@ -1057,9 +1137,131 @@ public class Mod : ModBase // <= Do not Remove.
                 address => _MOVZX_140e4035c_Address = address);
             _scanner.Scan("MOVZX_140e40427", "0F B6 05 ?? ?? ?? ?? C3 66 85 C9",
                 address => _MOVZX_140e40427_Address = address);
+            
+            // Segment 0
+            _scanner.ScanForData("DAT_142260b80", "4C 8D 05 ?? ?? ?? ?? 41 80 3C ?? 0A", 7, 3, 0,
+                address => _DAT_142260b80_Address = address);
+            
+            // For DATx142260b80
+            _scanner.Scan("LEA_14071a1ce", "4D 8D B4 24 ?? ?? ?? ?? 4F 8D 34 ??",
+                address => _LEA_14071a1ce_Address = address);
+            _scanner.Scan("LEA_14071a445", "4D 8D BC 24 ?? ?? ?? ?? 0F B7 41 ??",
+                address => _LEA_14071a445_Address = address);
+            _scanner.Scan("LEA_14073acb7", "48 8D 89 ?? ?? ?? ?? 48 85 C9 74 ??",
+                address => _LEA_14073acb7_Address = address);
+            _scanner.Scan("CMP_14073ad65", "80 BC ?? ?? ?? ?? ?? 15 75 ?? E8 ?? ?? ?? ?? 44 8B C0",
+                address => _CMP_14073ad65_Address = address);
+            _scanner.Scan("LEA_14073ae82", "48 8D 89 ?? ?? ?? ?? 48 85 C9 0F 84 ?? ?? ?? ?? 80 39 ??",
+                address => _LEA_14073ae82_Address = address);
+            _scanner.Scan("CMP_14073b083", "80 BC ?? ?? ?? ?? ?? 15 75 ?? E8 ?? ?? ?? ?? 8B D8",
+                address => _CMP_14073b083_Address = address);
+            _scanner.Scan("LEA_14073b110", "48 8D 0C C5 ?? ?? ?? ?? 48 03 CB",
+                address => _LEA_14073b110_Address = address);
+            _scanner.Scan("CMP_14076476f", "41 80 BC ?? ?? ?? ?? ?? 0A",
+                address => _CMP_14076476f_Address = address);
+            _scanner.Scan("MOVSX_14076487d", "45 0F BE 84 ?? ?? ?? ?? ??",
+                address => _MOVSX_14076487d_Address = address);
+            _scanner.Scan("LEA_1407b9f92", "4C 8D 04 C5 ?? ?? ?? ?? 43 0F BE 0C ??",
+                address => _LEA_1407b9f92_Address = address);
+            _scanner.Scan("MOVSX_1407fb6f3", "42 0F BE 94 ?? ?? ?? ?? ?? 48 8B 49 ?? E8 ?? ?? ?? ?? 48 8D 4D ?? 8B D8 E8 ?? ?? ?? ?? 0F BA E3 1B 73 ?? F3 0F 10 07 41 BD 0F 00 00 00",
+                address => _MOVSX_1407fb6f3_Address = address);
+            _scanner.Scan("MOVSX_1407fb805", "42 0F BE 94 ?? ?? ?? ?? ?? 48 8B 49 ?? E8 ?? ?? ?? ?? 48 8D 4D ?? 8B D8 E8 ?? ?? ?? ?? 0F BA E3 1B 73 ?? F3 0F 10 07 41 BD 1E 00 00 00",
+                address => _MOVSX_1407fb805_Address = address);
+            _scanner.Scan("MOVSX_1407fdee4", "0F BE 05 ?? ?? ?? ?? 03 D0",
+                address => _MOVSX_1407fdee4_Address = address);
+            _scanner.Scan("MOVSX_1407fdf5a", "0F BE 15 ?? ?? ?? ?? 48 89 45 ??",
+                address => _MOVSX_1407fdf5a_Address = address);
+            _scanner.Scan("LEA_14080095e", "48 8D B1 ?? ?? ?? ?? BB 01 00 00 00",
+                address => _LEA_14080095e_Address = address);
+            _scanner.Scan("LEA_140801ef4", "4C 8D 05 ?? ?? ?? ?? 41 80 3C ?? 0A",
+                address => _LEA_140801ef4_Address = address);
+            _scanner.Scan("MOVSX_140807419", "0F BE 94 ?? ?? ?? ?? ?? 0F B7 CF",
+                address => _MOVSX_140807419_Address = address);
+            _scanner.Scan("MOVSX_140808e2a", "41 0F BE 8C ?? ?? ?? ?? ?? FF C1",
+                address => _MOVSX_140808e2a_Address = address);
+            _scanner.Scan("LEA_140815aab", "4C 8D 3C C5 ?? ?? ?? ?? 43 80 3C ?? ??",
+                address => _LEA_140815aab_Address = address);
+            _scanner.Scan("MOVSX_1408eb262", "41 0F BE 84 ?? ?? ?? ?? ?? FF C0",
+                address => _MOVSX_1408eb262_Address = address);
+            _scanner.ScanMany("CMP_140911f79 and CMP_140925909", "41 80 BC ?? ?? ?? ?? ?? 15 E9 ?? ?? ?? ?? 45 8B 48 ?? 41 8D 41 ?? 83 F8 01 0F 87 ?? ?? ?? ?? 41 8B 40 ?? 41 83 F9 02 75 ?? 0F B7 C8 E8 ?? ?? ?? ?? 4C 8B 45 ?? 48 8B 55 ?? 0F B7 C0 0F B7 C0 49 8D 8E ?? ?? ?? ?? 48 8D 0C ?? 48 85 C9 0F 84 ?? ?? ?? ?? 80 39 ?? 0F 85 ?? ?? ?? ?? 48 89 5D ?? 48 85 D2 75 ?? 48 8B 4D ?? 48 85 C9 75 ?? 4D 85 C0 0F 84 ?? ?? ?? ?? EB ?? 48 8B 45 ?? 48 89 42 ?? 48 8B 4D ?? 48 85 C9 74 ?? 48 8B 55 ?? 48 89 51 ?? EB ?? 41 83 78 ?? 04 EB ?? 41 83 78 ?? 07 EB ?? 41 83 78 ?? 02 0F 85 ?? ?? ?? ?? 48 8B 45 ?? 48 89 5D ?? 48 85 D2 75 ?? 48 85 C0 75 ?? 49 8B 00 BA 01 00 00 00 49 8B C8 FF 10 48 8B 4D ?? 48 8B 55 ?? 48 89 75 ?? EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 55 ?? 48 89 50 ?? 48 8B CE 48 8B D6 48 89 4D ?? 48 89 55 ?? 48 8D 05 ?? ?? ?? ?? 48 89 45 ?? 48 85 D2 75 ?? 48 85 C9 74 ?? EB ?? 48 89 4A ?? 48 8B 4D ?? 48 85 C9 74 ?? 48 8B 55 ?? 48 89 51 ?? 48 89 75 ?? 48 89 75 ?? 48 8B CF E8 ?? ?? ?? ?? B0 01 EB ?? 48 8B 45 ?? 48 89 5D ?? 48 85 D2 75 ?? 48 85 C0 75 ?? 4D 85 C0 74 ?? 49 8B 00 BA 01 00 00 00 49 8B C8 FF 10 48 8B 4D ?? 48 8B 45 ?? 48 85 C9 75 ?? 48 85 C0 74 ?? 48 89 48 ?? EB ?? 48 89 41 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 4D ?? 48 89 48 ?? EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 55 ?? 48 89 50 ?? 48 8B CF E8 ?? ?? ?? ?? 32 C0 4C 8B 74 24 ?? 48 8B 5C 24 ?? 48 8B 74 24 ?? 48 8B 7C 24 ?? 48 83 C4 40 5D C3",
+                2, addresses =>
+                {
+                    _CMP_140911f79_Address = addresses[0];
+                    _CMP_140925909_Address = addresses[1];
+                });
+            _scanner.ScanMany("LEA_140911fb8 and LEA_140925948", "49 8D 8E ?? ?? ?? ?? 48 8D 0C ?? 48 85 C9 0F 84 ?? ?? ?? ?? 80 39 ?? 0F 85 ?? ?? ?? ?? 48 89 5D ?? 48 85 D2 75 ?? 48 8B 4D ?? 48 85 C9 75 ?? 4D 85 C0 0F 84 ?? ?? ?? ?? EB ?? 48 8B 45 ?? 48 89 42 ?? 48 8B 4D ?? 48 85 C9 74 ?? 48 8B 55 ?? 48 89 51 ?? EB ?? 41 83 78 ?? 04 EB ?? 41 83 78 ?? 07 EB ?? 41 83 78 ?? 02 0F 85 ?? ?? ?? ?? 48 8B 45 ?? 48 89 5D ?? 48 85 D2 75 ?? 48 85 C0 75 ?? 49 8B 00 BA 01 00 00 00 49 8B C8 FF 10 48 8B 4D ?? 48 8B 55 ?? 48 89 75 ?? EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 55 ?? 48 89 50 ?? 48 8B CE 48 8B D6 48 89 4D ?? 48 89 55 ?? 48 8D 05 ?? ?? ?? ?? 48 89 45 ?? 48 85 D2 75 ?? 48 85 C9 74 ?? EB ?? 48 89 4A ?? 48 8B 4D ?? 48 85 C9 74 ?? 48 8B 55 ?? 48 89 51 ?? 48 89 75 ?? 48 89 75 ?? 48 8B CF E8 ?? ?? ?? ?? B0 01 EB ?? 48 8B 45 ?? 48 89 5D ?? 48 85 D2 75 ?? 48 85 C0 75 ?? 4D 85 C0 74 ?? 49 8B 00 BA 01 00 00 00 49 8B C8 FF 10 48 8B 4D ?? 48 8B 45 ?? 48 85 C9 75 ?? 48 85 C0 74 ?? 48 89 48 ?? EB ?? 48 89 41 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 4D ?? 48 89 48 ?? EB ?? 48 89 42 ?? 48 8B 45 ?? 48 85 C0 74 ?? 48 8B 55 ?? 48 89 50 ?? 48 8B CF E8 ?? ?? ?? ?? 32 C0 4C 8B 74 24 ?? 48 8B 5C 24 ?? 48 8B 74 24 ?? 48 8B 7C 24 ?? 48 83 C4 40 5D C3",
+                2, addresses =>
+                {
+                    _LEA_140911fb8_Address = addresses[0];
+                    _LEA_140925948_Address = addresses[1];
+                });
+            _scanner.Scan("MOVSX_140ac50f3", "0F BE 94 ?? ?? ?? ?? ?? 48 89 45 ?? 48 8B 48 ?? E8 ?? ?? ?? ?? 48 8B 55 ?? 4C 8D 05 ?? ?? ?? ??",
+                address => _MOVSX_140ac50f3_Address = address);
+            _scanner.Scan("MOVSX_140ac5983", "0F BE 94 ?? ?? ?? ?? ?? 48 8B 49 ?? E8 ?? ?? ?? ?? 8B D8",
+                address => _MOVSX_140ac5983_Address = address);
+            _scanner.Scan("LEA_140ad202a", "49 8D B5 ?? ?? ?? ?? 48 8B DA",
+                address => _LEA_140ad202a_Address = address);
+            _scanner.Scan("LEA_140ad241e", "48 8D 34 C5 ?? ?? ?? ?? 42 80 3C ?? ??",
+                address => _LEA_140ad241e_Address = address);
+            _scanner.Scan("LEA_140ad2745", "4C 8D 34 C5 ?? ?? ?? ?? 43 80 3C ?? ??",
+                address => _LEA_140ad2745_Address = address);
+            _scanner.Scan("LEA_140b31af6", "48 8D 3C C5 ?? ?? ?? ?? 49 03 F8 80 3F ??",
+                address => _LEA_140b31af6_Address = address);
+            _scanner.Scan("LEA_140b31fa5", "4D 8D B9 ?? ?? ?? ?? 41 80 3C ?? 0A",
+                address => _LEA_140b31fa5_Address = address);
+            _scanner.Scan("LEA_140b325d8", "49 8D BD ?? ?? ?? ?? 80 3C ?? 0A",
+                address => _LEA_140b325d8_Address = address);
+            _scanner.Scan("LEA_140b32a62", "4C 8D B2 ?? ?? ?? ?? 41 80 3C ?? 0A",
+                address => _LEA_140b32a62_Address = address);
+            _scanner.Scan("CMP_140b7469f", "43 80 BC ?? ?? ?? ?? ?? 0A 76 ??",
+                address => _CMP_140b7469f_Address = address);
+            _scanner.Scan("MOVSX_140b748c0", "43 0F BE 84 ?? ?? ?? ?? ?? 03 D0",
+                address => _MOVSX_140b748c0_Address = address);
+            _scanner.Scan("MOVSX_140b74973", "43 0F BE 94 ?? ?? ?? ?? ?? 48 89 45 ??",
+                address => _MOVSX_140b74973_Address = address);
+            _scanner.Scan("CMP_140d71d6a", "41 38 84 ?? ?? ?? ?? ?? 75 ?? 0F B7 CB E8 ?? ?? ?? ?? 0F BA E0 1E 72 ?? 0F B7 CB 8B D1 81 C1 00 A0 FF FF 48 C1 E9 05 83 E2 1F 41 8B 84 ?? ?? ?? ?? ?? 0F A3 D0 72 ??",
+                address => _CMP_140d71d6a_Address = address);
+            _scanner.Scan("CMP_140d72d0c", "41 38 84 ?? ?? ?? ?? ?? 75 ?? 0F B7 CB E8 ?? ?? ?? ?? 0F BA E0 1E 72 ?? 0F B7 CB 8B D1 81 C1 00 A0 FF FF 48 C1 E9 05 83 E2 1F 41 8B 84 ?? ?? ?? ?? ?? 0F A3 D0 73 ??",
+                address => _CMP_140d72d0c_Address = address);
+            _scanner.Scan("CMP_140d73094", "38 84 ?? ?? ?? ?? ?? 75 ?? 0F B7 CB E8 ?? ?? ?? ?? 0F BA E0 1E 72 ?? 48 8B 8C 24 ?? ?? ?? ??",
+                address => _CMP_140d73094_Address = address);
+            _scanner.Scan("CMP_140e16eab", "43 80 BC ?? ?? ?? ?? ?? 0A 75 ??",
+                address => _CMP_140e16eab_Address = address);
+            _scanner.Scan("MOVSX_140e16f21", "43 0F BE 84 ?? ?? ?? ?? ?? 48 83 C4 28",
+                address => _MOVSX_140e16f21_Address = address);
+            _scanner.Scan("LEA_140e16f74", "48 8D 0D ?? ?? ?? ?? 0F BE 04 ?? 83 F8 08",
+                address => _LEA_140e16f74_Address = address);
+            _scanner.Scan("LEA_140e32879", "48 8D 15 ?? ?? ?? ?? 0F B7 C7",
+                address => _LEA_140e32879_Address = address);
+            _scanner.Scan("LEA_140e32cd6", "4C 8D 0C C5 ?? ?? ?? ?? 48 8D 43 ??",
+                address => _LEA_140e32cd6_Address = address);
+            _scanner.Scan("LEA_140e33076", "4C 8D 3D ?? ?? ?? ?? 0F 1F 00 8B 43 ??",
+                address => _LEA_140e33076_Address = address);
+            _scanner.Scan("LEA_140e331d6", "4C 8D 3D ?? ?? ?? ?? 0F 1F 00 44 3B 73 ??",
+                address => _LEA_140e331d6_Address = address);
+            _scanner.ScanForData("CALL_14078f65d for FUN_140e3eb70 for LEA_140e3eb73", "E8 ?? ?? ?? ?? 41 0F B7 8F ?? ?? ?? ?? 48 8B D8 E8 ?? ?? ?? ?? 0F B6 0B 80 E9 0B 80 F9 0A 0F 86 ?? ?? ?? ??",
+                5, 1, 0, address => _LEA_140e3eb73_Address = address + 3);
+            _scanner.Scan("LEA_140e4051a", "4C 8D 15 ?? ?? ?? ?? 41 0F B7 00",
+                address => _LEA_140e4051a_Address = address);
+            _scanner.Scan("LEA_140fae067", "48 8D 15 ?? ?? ?? ?? 0F BE 14 ??",
+                address => _LEA_140fae067_Address = address);
+            _scanner.Scan("MOVSX_140fb00f7", "41 0F BE 94 ?? ?? ?? ?? ?? 45 0F B6 94 ?? ?? ?? ?? ??",
+                address => _MOVSX_140fb00f7_Address = address);
+            _scanner.Scan("MOVSX_140fb0317", "0F BE 94 ?? ?? ?? ?? ?? 44 0F B6 9C ?? ?? ?? ?? ??",
+                address => _MOVSX_140fb0317_Address = address);
+            _scanner.Scan("MOVSX_140fb0c79", "41 0F BE 94 ?? ?? ?? ?? ?? 45 0F B6 84 ?? ?? ?? ?? ??",
+                address => _MOVSX_140fb0c79_Address = address);
+            _scanner.Scan("MOVSX_140fb0e20", "41 0F BE 94 ?? ?? ?? ?? ?? 83 FA FF",
+                address => _MOVSX_140fb0e20_Address = address);
+            _scanner.Scan("LEA_140fb3c8f", "4C 8D 2D ?? ?? ?? ?? 44 8B 25 ?? ?? ?? ?? 0F 57 C9",
+                address => _LEA_140fb3c8f_Address = address);
+            _scanner.Scan("LEA_140fb8094", "4C 8D 15 ?? ?? ?? ?? 4C 8B C9 41 0F B6 54 ?? ??",
+                address => _LEA_140fb8094_Address = address);
+            _scanner.Scan("LEA_141780647", "48 8D 0D ?? ?? ?? ?? 80 7C ?? ?? 01",
+                address => _LEA_141780647_Address = address);
 
             
-            /* _MOVZX_140e40427_Address
+            /* _LEA_141780647_Address
             _scanner.Scan("NAMEGE", "PATTERNGE",
                 address => ADRESSGE = address);
                 */
@@ -1078,15 +1280,20 @@ public class Mod : ModBase // <= Do not Remove.
             if (plVar5[1] != 0)
             {
                 Log.Information("SKILL.TBL loaded and ready!");
+                
+                Buffer.MemoryCopy((byte*)_DAT_142260b80_Address, _pinnedSkillElements.Pointer,
+                    VanillaSkillElementsLength * SkillElementLength, VanillaSkillElementsLength * SkillElementLength);
+                _skillElementsOffset = (long)_pinnedSkillElements.Pointer - _DAT_142260b80_Address;
+                
+                Buffer.MemoryCopy((byte*)_DAT_142226bf0_Address, _pinnedActiveSkillData.Pointer,
+                    VanillaActiveSkillDataLength * ActiveSkillDataLength, VanillaActiveSkillDataLength * ActiveSkillDataLength);
+                _activeSkillDataOffset = (long)_pinnedActiveSkillData.Pointer - _DAT_142226bf0_Address;
 
-                var mySkillBytes = _pinnedSkillTblBytes.Pointer;
-                var japaneseSkillBytes = (byte*)_DAT_142226bf0_Address;
-                
-                Buffer.MemoryCopy(japaneseSkillBytes, mySkillBytes, 800 * 48, 800 * 48);
-                
-                _customSkillDataOffset = (long)_pinnedSkillTblBytes.Pointer - (long)japaneseSkillBytes;
-                
-                Log.Information($"My pointer address: {(ulong)_pinnedSkillTblBytes.Pointer:X}, original pointer address: {(ulong)_DAT_142226bf0_Address:X}, difference: {_customSkillDataOffset}");
+                Log.Information("We do a little tomfoolery. Replacing bytes for skill id 1800 with bytes of 22 (Bufudyne)");
+                Buffer.MemoryCopy(_pinnedSkillElements.Pointer + 22 * SkillElementLength, _pinnedSkillElements.Pointer + 1800 * SkillElementLength,
+                    SkillElementLength, SkillElementLength);
+                Buffer.MemoryCopy(_pinnedActiveSkillData.Pointer + 22 * ActiveSkillDataLength, _pinnedActiveSkillData.Pointer + 1800 * ActiveSkillDataLength,
+                    ActiveSkillDataLength, ActiveSkillDataLength);
                 
                 AboardExclamationPoint();
             }
@@ -1097,10 +1304,14 @@ public class Mod : ModBase // <= Do not Remove.
     
     private unsafe void AboardExclamationPoint()
     {
+        // Segment 1
+        _customInstructionSetPointer = (long)_pinnedActiveSkillData.Pointer;
+        _customInstructionSetOffset = _activeSkillDataOffset;
+        
         // For DAT_142226bf0
         CreateHook(_LEA_140105ab5_Address, [
             "use64",
-            $"mov r10, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r10, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_TEST_140719e12_Address, CreateCustomInstructionSet([
@@ -1109,7 +1320,7 @@ public class Mod : ModBase // <= Do not Remove.
         
         CreateHook(_LEA_14071bd02_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_MOV_14073a0ae_Address, CreateCustomInstructionSet([
@@ -1130,102 +1341,102 @@ public class Mod : ModBase // <= Do not Remove.
         
         CreateHook(_LEA_1407521d7_Address, [
             "use64",
-            $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rcx, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140752496_Address, [
             "use64",
-            $"mov r10, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r10, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_14075277d_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140752df5_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140752f6b_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140753697_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_1407536ca_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_14075384d_Address, [
             "use64",
-            $"mov r10, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r10, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_1407538ad_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_14075396b_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140753af8_Address, [
             "use64",
-            $"mov r15, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r15, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140753c6a_Address, [
             "use64",
-            $"mov r10, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r10, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140753dfd_Address, [
             "use64",
-            $"mov r13, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r13, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140753fe4_Address, [
             "use64",
-            $"mov r15, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r15, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_1407541de_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140754479_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_14075e087_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140771dfc_Address, [
             "use64",
-            $"mov r8, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r8, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140771f54_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_1407724e7_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_TEST_14077b9eb_Address, CreateCustomInstructionSet([
@@ -1238,82 +1449,82 @@ public class Mod : ModBase // <= Do not Remove.
         
         CreateHook(_LEA_1407afc81_Address, [
             "use64",
-            $"mov r8, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r8, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_1407aff57_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_1407b076e_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_1407b40a0_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_1407b81fb_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_1407b9128_Address, [
             "use64",
-            $"mov rbx, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rbx, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140801ee2_Address, [
             "use64",
-            $"mov r8, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r8, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140810877_Address, [
             "use64",
-            $"mov r9, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r9, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140811470_Address, [
             "use64",
-            $"mov r9, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r9, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_14081162d_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_14085e961_Address, [
             "use64",
-            $"mov r15, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r15, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140868c5e_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140868f94_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_14086fbc4_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140870ad8_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140871e93_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_MOV_1408ec3c4_Address, CreateCustomInstructionSet([
@@ -1322,242 +1533,242 @@ public class Mod : ModBase // <= Do not Remove.
         
         CreateHook(_LEA_1409f0136_Address, [
             "use64",
-            $"mov r9, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r9, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140acc910_Address, [
             "use64",
-            $"mov rbx, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rbx, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140accb16_Address, [
             "use64",
-            $"mov rbx, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rbx, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140accf19_Address, [
             "use64",
-            $"mov r15, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r15, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140acd266_Address, [
             "use64",
-            $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rcx, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140acd6f0_Address, [
             "use64",
-            $"mov r14, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r14, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140ad431e_Address, [
             "use64",
-            $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rcx, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140ad4414_Address, [
             "use64",
-            $"mov rdx, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rdx, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140ad4431_Address, [
             "use64",
-            $"mov rdx, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rdx, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140ad44d5_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140ad4615_Address, [
             "use64",
-            $"mov rdx, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rdx, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140ad474b_Address, [
             "use64",
-            $"mov rdx, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rdx, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140ad47c4_Address, [
             "use64",
-            $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rcx, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140ad48e6_Address, [
             "use64",
-            $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rcx, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140ad55fa_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140ad5f65_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140ad653a_Address, [
             "use64",
-            $"mov rbx, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rbx, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140ad6671_Address, [
             "use64",
-            $"mov rdx, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rdx, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140ad707f_Address, [
             "use64",
-            $"mov r9, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r9, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140ad74cf_Address, [
             "use64",
-            $"mov r8, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r8, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140ad98cb_Address, [
             "use64",
-            $"mov r15, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r15, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140ad9b75_Address, [
             "use64",
-            $"mov r15, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r15, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140aedd10_Address, [
             "use64",
-            $"mov r10, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r10, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140aee4f6_Address, [
             "use64",
-            $"mov r10, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r10, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140aee8d0_Address, [
             "use64",
-            $"mov r10, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r10, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140aeec6a_Address, [
             "use64",
-            $"mov r10, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r10, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140b0fd01_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140b10242_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140b6650b_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140b76766_Address, [
             "use64",
-            $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rcx, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140b768bd_Address, [
             "use64",
-            $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rcx, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140b768fa_Address, [
             "use64",
-            $"mov r8, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r8, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140b7691c_Address, [
             "use64",
-            $"mov r8, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r8, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140b769ca_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140b76b0e_Address, [
             "use64",
-            $"mov r8, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r8, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140b76c62_Address, [
             "use64",
-            $"mov r8, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r8, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140b76df8_Address, [
             "use64",
-            $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rcx, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140d23a05_Address, [
             "use64",
-            $"mov r15, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r15, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140d6b75a_Address, [
             "use64",
-            $"mov r12, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r12, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140d6b845_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140d6b8f5_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140d6b925_Address, [
             "use64",
-            $"mov r12, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r12, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140d6bd7d_Address, [
             "use64",
-            $"mov r15, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r15, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140d73e5e_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140dbaaa7_Address, [
             "use64",
-            $"mov rdx, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rdx, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140dbac38_Address, [
             "use64",
-            $"mov r8, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r8, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140e0fb52_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140e10232_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_MOV_140e1072a_Address, CreateCustomInstructionSet([
@@ -1566,12 +1777,12 @@ public class Mod : ModBase // <= Do not Remove.
         
         CreateHook(_LEA_140e1223f_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140e12590_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_TEST_140e12933_Address, CreateCustomInstructionSet([
@@ -1588,42 +1799,42 @@ public class Mod : ModBase // <= Do not Remove.
         
         CreateHook(_LEA_140e139f1_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140e14347_Address, [
             "use64",
-            $"mov r9, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r9, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140e14502_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140e1460a_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
-        CreateHook(_LEA_140e1492a_Address, [
-            "use64",
-            $"mov r10, {(ulong)_pinnedSkillTblBytes.Pointer}"
-        ]);
+        // Hooking this normally crashes the game. I was unable to figure out why
+        CreateHook(_LEA_140e1492a_Address + 7, CreateCustomInstructionSet([
+            "mov r10, r12"
+        ], "r12", false), AsmHookBehaviour.ExecuteFirst);
         
         CreateHook(_LEA_140e1498c_Address, [
             "use64",
-            $"mov r10, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r10, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140e14b56_Address, [
             "use64",
-            $"mov r13, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov r13, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140e14dd5_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_MOV_140e16e9e_Address, CreateCustomInstructionSet([
@@ -1632,67 +1843,67 @@ public class Mod : ModBase // <= Do not Remove.
         
         CreateHook(_LEA_140e1b1ef_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140e1b2bd_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140e1b2f3_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140e1b31b_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140e1b3b1_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140e1c435_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140e32ef3_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140e32f0a_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140e32f47_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140e3318a_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140e3330a_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140e3342a_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_140e3344a_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_MOV_140e3358a_Address, CreateCustomInstructionSet([
@@ -1729,22 +1940,22 @@ public class Mod : ModBase // <= Do not Remove.
         
         CreateHook(_LEA_140e3eb53_Address, [
             "use64",
-            $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rcx, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_1417b4694_Address, [
             "use64",
-            $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rcx, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_14a8ab88f_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         CreateHook(_LEA_14bd93fea_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer}"
         ]);
         
         // For DAT_142226bf4
@@ -1758,7 +1969,7 @@ public class Mod : ModBase // <= Do not Remove.
         
         CreateHook(_LEA_140b110f8_Address, [
             "use64",
-            $"mov r11, {(ulong)_pinnedSkillTblBytes.Pointer + 4}"
+            $"mov r11, {(ulong)_pinnedActiveSkillData.Pointer + 4}"
         ]);
         
         CreateHook(_TEST_140b31f96_Address, CreateCustomInstructionSet([
@@ -1775,23 +1986,23 @@ public class Mod : ModBase // <= Do not Remove.
         
         CreateHook(_LEA_140e2bc7f_Address, [
             "use64",
-            $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer + 4}"
+            $"mov rcx, {(ulong)_pinnedActiveSkillData.Pointer + 4}"
         ]);
         
         CreateHook(_LEA_14bc3c1d9_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 4}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 4}"
         ]);
         
         // For DAT_142226bf6
         CreateHook(_LEA_140101809_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 6}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 6}"
         ]);
         
         CreateHook(_LEA_1401018a9_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 6}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 6}"
         ]);
         
         CreateHook(_CMP_14077bd39_Address, CreateCustomInstructionSet([
@@ -1828,7 +2039,7 @@ public class Mod : ModBase // <= Do not Remove.
         
         CreateHook(_LEA_140e3335c_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 6}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 6}"
         ]);
         
         // For DAT_142226bf7
@@ -1854,7 +2065,7 @@ public class Mod : ModBase // <= Do not Remove.
         
         CreateHook(_LEA_14171e63b_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 7}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 7}"
         ]);
         
         CreateHook(_MOVZX_14177b5ae_Address, CreateCustomInstructionSet([
@@ -1863,7 +2074,7 @@ public class Mod : ModBase // <= Do not Remove.
         
         CreateHook(_LEA_141780be8_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 7}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 7}"
         ]);
         
         // For DAT_142226bfc
@@ -1885,7 +2096,7 @@ public class Mod : ModBase // <= Do not Remove.
         
         CreateHook(_LEA_1407b8b36_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_CMP_1407ba966_Address, CreateCustomInstructionSet([
@@ -1902,102 +2113,102 @@ public class Mod : ModBase // <= Do not Remove.
         
         CreateHook(_LEA_1407bf421_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_LEA_1407c84a2_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_LEA_1407e5a4e_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_LEA_1407ecfc0_Address, [
             "use64",
-            $"mov rbx, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov rbx, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_LEA_1407ed288_Address, [
             "use64",
-            $"mov rbx, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov rbx, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_LEA_1407ed9e6_Address, [
             "use64",
-            $"mov r8, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov r8, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_LEA_1407edc4a_Address, [
             "use64",
-            $"mov r8, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov r8, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_LEA_1407ee1dd_Address, [
             "use64",
-            $"mov rdx, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov rdx, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_LEA_1407ee483_Address, [
             "use64",
-            $"mov rdx, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov rdx, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_LEA_1407efdb8_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_LEA_1407f1a15_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_LEA_1407f2964_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_LEA_1407f32f4_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_LEA_1407f5514_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_LEA_1407f5a63_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_LEA_1407f6223_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_LEA_1407f6d53_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_LEA_1407f83d3_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_LEA_1407f9327_Address, [
             "use64",
-            $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov rcx, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_LEA_1407f9ac3_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_CMP_1407fa38f_Address, CreateCustomInstructionSet([
@@ -2026,7 +2237,7 @@ public class Mod : ModBase // <= Do not Remove.
         
         CreateHook(_LEA_140acc3d0_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_MOVZX_140ad3048_Address, CreateCustomInstructionSet([
@@ -2039,12 +2250,12 @@ public class Mod : ModBase // <= Do not Remove.
         
         CreateHook(_LEA_140ada874_Address, [
             "use64",
-            $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov rcx, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_LEA_140b5115b_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_CMP_140b53c15_Address, CreateCustomInstructionSet([
@@ -2053,17 +2264,17 @@ public class Mod : ModBase // <= Do not Remove.
         
         CreateHook(_LEA_140b7daa1_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_LEA_140b7ec53_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_LEA_140b82003_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_MOVZX_140d23838_Address, CreateCustomInstructionSet([
@@ -2072,12 +2283,12 @@ public class Mod : ModBase // <= Do not Remove.
         
         CreateHook(_LEA_140d73d5f_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_LEA_140e3519a_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 12}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 12}"
         ]);
         
         CreateHook(_MOVZX_14123d8c3_Address, CreateCustomInstructionSet([
@@ -2091,22 +2302,22 @@ public class Mod : ModBase // <= Do not Remove.
         
         CreateHook(_LEA_140ad5841_Address, [
             "use64",
-            $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer + 13}"
+            $"mov rcx, {(ulong)_pinnedActiveSkillData.Pointer + 13}"
         ]);
         
         CreateHook(_LEA_140ad5bb6_Address, [
             "use64",
-            $"mov rcx, {(ulong)_pinnedSkillTblBytes.Pointer + 13}"
+            $"mov rcx, {(ulong)_pinnedActiveSkillData.Pointer + 13}"
         ]);
         
         CreateHook(_LEA_140b764d7_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 13}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 13}"
         ]);
         
         CreateHook(_LEA_14bd9429a_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 13}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 13}"
         ]);
         
         // For DAT_142226bfe
@@ -2117,7 +2328,7 @@ public class Mod : ModBase // <= Do not Remove.
         // For DAT_142226c00
         CreateHook(_LEA_1407ba233_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 16}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 16}"
         ]);
         
         // For DAT_142226c04
@@ -2301,7 +2512,7 @@ public class Mod : ModBase // <= Do not Remove.
         
         CreateHook(_LEA_14080e0c4_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 32}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 32}"
         ]);
         
         CreateHook(_TEST_1408a8c39_Address, CreateCustomInstructionSet([
@@ -2343,7 +2554,7 @@ public class Mod : ModBase // <= Do not Remove.
         
         CreateHook(_LEA_140ad7871_Address, [
             "use64",
-            $"mov rax, {(ulong)_pinnedSkillTblBytes.Pointer + 36}"
+            $"mov rax, {(ulong)_pinnedActiveSkillData.Pointer + 36}"
         ]);
         
         CreateHook(_MOV_140e33b47_Address, CreateCustomInstructionSet([
@@ -2425,24 +2636,277 @@ public class Mod : ModBase // <= Do not Remove.
             "movzx eax, byte [r12 + 0x2d]"
         ], "r12", false));
         
-        // _MOVZX_140e40427_Address
+        // Segment 0
+        _customInstructionSetPointer = (long)_pinnedSkillElements.Pointer;
+        _customInstructionSetOffset = _skillElementsOffset;
+        
+        // For DATx142260b80
+        CreateHook(_LEA_14071a1ce_Address, [
+            "use64",
+            $"mov r14, {_customInstructionSetPointer}"
+        ]);
+        
+        CreateHook(_LEA_14071a445_Address, [
+            "use64",
+            $"mov r15, {_customInstructionSetPointer}"
+        ]);
+        
+        CreateHook(_LEA_14073acb7_Address, CreateCustomInstructionSet([
+            "lea rcx, [rcx + r12]"
+        ], "r12", true), AsmHookBehaviour.ExecuteAfter);
+        
+        CreateHook(_CMP_14073ad65_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + rax*0x8], 0x15"
+        ], "r12", false));
+        
+        CreateHook(_LEA_14073ae82_Address, CreateCustomInstructionSet([
+            "lea rcx, [rcx + r12]"
+        ], "r12", true), AsmHookBehaviour.ExecuteAfter);
+        
+        CreateHook(_CMP_14073b083_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + rax*0x8], 0x15"
+        ], "r12", false));
+        
+        CreateHook(_LEA_14073b110_Address, CreateCustomInstructionSet([
+            "lea rcx, [rcx + r12]"
+        ], "r12", true), AsmHookBehaviour.ExecuteAfter);
+        
+        CreateHook(_CMP_14076476f_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + rbx*0x8], 0xa"
+        ], "r12", false));
+        
+        CreateHook(_MOVSX_14076487d_Address, CreateCustomInstructionSet([
+            "movsx r8d, byte [r12 + rbx*0x8]"
+        ], "r12", false));
+        
+        CreateHook(_LEA_1407b9f92_Address, CreateCustomInstructionSet([
+            "lea r8, [r8 + r12]"
+        ], "r12", true), AsmHookBehaviour.ExecuteAfter);
+        
+        CreateHook(_MOVSX_1407fb6f3_Address, CreateCustomInstructionSet([
+            "movsx edx, byte [r12 + r14*0x8]"
+        ], "r12", false));
+        
+        CreateHook(_MOVSX_1407fb805_Address, CreateCustomInstructionSet([
+            "movsx edx, byte [r12 + r14*0x8]"
+        ], "r12", false));
+        
+        CreateHook(_MOVSX_1407fdee4_Address, CreateCustomInstructionSet([
+            "movsx eax, byte [r12]"
+        ], "r12", false));
+        
+        CreateHook(_MOVSX_1407fdf5a_Address, CreateCustomInstructionSet([
+            "movsx edx, byte [r12]"
+        ], "r12", false));
+        
+        CreateHook(_LEA_14080095e_Address, CreateCustomInstructionSet([
+            "lea rsi, [rsi + r12]"
+        ], "r12", true), AsmHookBehaviour.ExecuteAfter);
+        
+        CreateHook(_LEA_14080095e_Address, [
+            "use64",
+            $"mov rsi, {_customInstructionSetPointer}"
+        ]);
+        
+        CreateHook(_LEA_140801ef4_Address, [
+            "use64",
+            $"mov r8, {_customInstructionSetPointer}"
+        ]);
+        
+        CreateHook(_MOVSX_140807419_Address, CreateCustomInstructionSet([
+            "movsx edx, byte [r12 + rcx*0x8]"
+        ], "r12", false));
+        
+        CreateHook(_MOVSX_140808e2a_Address, CreateCustomInstructionSet([
+            "movsx ecx, byte [r12 + rax*0x8]"
+        ], "r12", false));
+        
+        CreateHook(_LEA_140815aab_Address, CreateCustomInstructionSet([
+            "lea r15, [r15 + r12]"
+        ], "r12", true), AsmHookBehaviour.ExecuteAfter);
+        
+        CreateHook(_MOVSX_1408eb262_Address, CreateCustomInstructionSet([
+            "movsx eax, byte [r12 + rdx*0x8]"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140911f79_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + rax*0x8], 0x15"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140925909_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + rax*0x8], 0x15"
+        ], "r12", false));
+        
+        CreateHook(_LEA_140911fb8_Address, [
+            "use64",
+            $"mov rcx, {_customInstructionSetPointer}"
+        ]);
+        
+        CreateHook(_LEA_140925948_Address, [
+            "use64",
+            $"mov rcx, {_customInstructionSetPointer}"
+        ]);
+        
+        CreateHook(_MOVSX_140ac50f3_Address, CreateCustomInstructionSet([
+            "movsx edx, byte [r12 + rbx*0x8]"
+        ], "r12", false));
+        
+        CreateHook(_MOVSX_140ac5983_Address, CreateCustomInstructionSet([
+            "movsx edx, byte [r12 + rbx*0x8]"
+        ], "r12", false));
+        
+        CreateHook(_LEA_140ad202a_Address, CreateCustomInstructionSet([
+            "lea rsi, [rsi + r12]"
+        ], "r12", true), AsmHookBehaviour.ExecuteAfter);
+        
+        CreateHook(_LEA_140ad241e_Address, CreateCustomInstructionSet([
+            "lea rsi, [rsi + r12]"
+        ], "r12", true), AsmHookBehaviour.ExecuteAfter);
+        
+        CreateHook(_LEA_140ad2745_Address, CreateCustomInstructionSet([
+            "lea r14, [r14 + r12]"
+        ], "r12", true), AsmHookBehaviour.ExecuteAfter);
+        
+        CreateHook(_LEA_140b31af6_Address, CreateCustomInstructionSet([
+            "lea rdi, [rdi + r12]"
+        ], "r12", true), AsmHookBehaviour.ExecuteAfter);
+        
+        CreateHook(_LEA_140b31fa5_Address, [
+            "use64",
+            $"mov r15, {_customInstructionSetPointer}"
+        ]);
+        
+        CreateHook(_LEA_140b325d8_Address, [
+            "use64",
+            $"mov rdi, {_customInstructionSetPointer}"
+        ]);
+        
+        CreateHook(_LEA_140b32a62_Address, [
+            "use64",
+            $"mov r14, {_customInstructionSetPointer}"
+        ]);
+        
+        CreateHook(_CMP_140b7469f_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + r14*0x8], 0xa"
+        ], "r12", false));
+        
+        CreateHook(_MOVSX_140b748c0_Address, CreateCustomInstructionSet([
+            "movsx eax, byte [r12 + r14*0x8]"
+        ], "r12", false));
+        
+        CreateHook(_MOVSX_140b74973_Address, CreateCustomInstructionSet([
+            "movsx edx, byte [r12 + r14*0x8]"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140d71d6a_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + rcx*0x8], al"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140d72d0c_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + rcx*0x8], al"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140d73094_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + rcx*0x8], al"
+        ], "r12", false));
+        
+        CreateHook(_CMP_140e16eab_Address, CreateCustomInstructionSet([
+            "cmp byte [r12 + r9*0x8], 0xa"
+        ], "r12", false));
+        
+        CreateHook(_MOVSX_140e16f21_Address, CreateCustomInstructionSet([
+            "movsx eax, byte [r12 + r9*0x8]"
+        ], "r12", false));
+        
+        CreateHook(_LEA_140e16f74_Address, [
+            "use64",
+            $"mov rcx, {_customInstructionSetPointer}"
+        ]);
+        
+        CreateHook(_LEA_140e32879_Address, [
+            "use64",
+            $"mov rdx, {_customInstructionSetPointer}"
+        ]);
+        
+        CreateHook(_LEA_140e32cd6_Address, CreateCustomInstructionSet([
+            "lea r9, [r9 + r12]"
+        ], "r12", true), AsmHookBehaviour.ExecuteAfter);
+        
+        CreateHook(_LEA_140e33076_Address, [
+            "use64",
+            $"mov r15, {_customInstructionSetPointer}"
+        ]);
+        
+        CreateHook(_LEA_140e331d6_Address, [
+            "use64",
+            $"mov r15, {_customInstructionSetPointer}"
+        ]);
+        
+        CreateHook(_LEA_140e3eb73_Address, [
+            "use64",
+            $"mov rcx, {_customInstructionSetPointer}"
+        ]);
+        
+        CreateHook(_LEA_140e4051a_Address, [
+            "use64",
+            $"mov r10, {_customInstructionSetPointer}"
+        ]);
+        
+        CreateHook(_LEA_140fae067_Address, [
+            "use64",
+            $"mov rdx, {_customInstructionSetPointer}"
+        ]);
+        
+        CreateHook(_MOVSX_140fb00f7_Address, CreateCustomInstructionSet([
+            "movsx edx, byte [r12 + rcx*0x8]"
+        ], "r12", false));
+        
+        CreateHook(_MOVSX_140fb0317_Address, CreateCustomInstructionSet([
+            "movsx edx, byte [r12 + rcx*0x8]"
+        ], "r12", false));
+        
+        CreateHook(_MOVSX_140fb0c79_Address, CreateCustomInstructionSet([
+            "movsx edx, byte [r12 + rax*0x8]"
+        ], "r12", false));
+        
+        CreateHook(_MOVSX_140fb0e20_Address, CreateCustomInstructionSet([
+            "movsx edx, byte [r12 + rax*0x8]"
+        ], "r12", false));
+        
+        CreateHook(_LEA_140fb3c8f_Address, [
+            "use64",
+            $"mov r13, {_customInstructionSetPointer}"
+        ]);
+        
+        CreateHook(_LEA_140fb8094_Address, [
+            "use64",
+            $"mov r10, {_customInstructionSetPointer}"
+        ]);
+        
+        CreateHook(_LEA_141780647_Address, [
+            "use64",
+            $"mov rcx, {_customInstructionSetPointer}"
+        ]);
+        
+        
+        // _LEA_141780647_Address
         
         // fsadfjsdjflksjfdokjsfdj
     }
     
-    private void CreateHook(long address, string[] function)
+    private void CreateHook(long address, string[] function, AsmHookBehaviour asmHookBehaviour = AsmHookBehaviour.DoNotExecuteOriginal)
     {
-        _asmHooks.Add(_hooks!.CreateAsmHook(function, address, AsmHookBehaviour.DoNotExecuteOriginal).Activate());
+        _asmHooks.Add(_hooks!.CreateAsmHook(function, address, asmHookBehaviour).Activate());
     }
 
-    private unsafe string[] CreateCustomInstructionSet(string[] customInstructions, string dataOffsetRegister, bool registerIsOffset = true)
+    private string[] CreateCustomInstructionSet(string[] customInstructions, string dataOffsetRegister, bool registerIsOffset)
     {
         _customInstructionSetList.Clear();
         
         _customInstructionSetList.AddRange([
             "use64",
             $"push {dataOffsetRegister}",
-            registerIsOffset ? $"mov {dataOffsetRegister}, {_customSkillDataOffset}" : $"mov {dataOffsetRegister}, {(long)_pinnedSkillTblBytes.Pointer}"
+            registerIsOffset ? $"mov {dataOffsetRegister}, {_customInstructionSetOffset}" : $"mov {dataOffsetRegister}, {_customInstructionSetPointer}"
         ]);
         
         _customInstructionSetList.AddRange(customInstructions);
