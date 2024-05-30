@@ -8,7 +8,7 @@ using Project.Utils;
 using Reloaded.Hooks.Definitions.X64;
 using Reloaded.Hooks.Definitions;
 using Reloaded.Hooks.Definitions.Enums;
-using Reloaded.Memory.Sigscan;
+using Reloaded.Memory;
 using Reloaded.Memory.Utilities;
 using IReloadedHooks = Reloaded.Hooks.Definitions.IReloadedHooks;
 
@@ -476,6 +476,58 @@ public class Mod : ModBase // <= Do not Remove.
     private nint _MOVZX_140fb0e30_Address;
     private nint _LEA_140fb3803_Address;
     
+    // Funny literal replacements
+    private nint _LiteralReplacement_140fa4eda_Address;
+    private nint _LiteralReplacement_140faf7ed_Address;
+    private nint _LiteralReplacement_140fb3814_Address;
+    private nint _LiteralReplacement_140fb3d43_Address;
+    private nint _LiteralReplacement_14076ff34_Address;
+    private nint _LiteralReplacement_14073b876_Address;
+    private nint _LiteralReplacement_14073b458_Address;
+    private nint _LiteralReplacement_14073c1c6_Address;
+    private nint _LiteralReplacement_14076472e_Address;
+    private nint _LiteralReplacement_1407b9f6c_Address;
+    private nint _LiteralReplacement_14080093d_Address;
+    private nint _LiteralReplacement_140801ec9_Address;
+    private nint _LiteralReplacement_140802097_Address;
+    private nint _LiteralReplacement_140800b29_Address;
+    private nint _LiteralReplacement_1407ba0c1_Address;
+    private nint _LiteralReplacement_140764905_Address;
+    private nint _LiteralReplacement_1408073f8_Address;
+    private nint _LiteralReplacement_140808dab_Address;
+    private nint _LiteralReplacement_14080988e_Address;
+    private nint _LiteralReplacement_140b31f61_Address;
+    private nint _LiteralReplacement_140b3241f_Address;
+    private nint _LiteralReplacement_140b32a23_Address;
+    private nint _LiteralReplacement_140b32ec1_Address;
+    private nint _LiteralReplacement_140b744d1_Address;
+    private nint _LiteralReplacement_140b74c2e_Address;
+    private nint _LiteralReplacement_140e16e8b_Address;
+    private nint _LiteralReplacement_140fb3d45_Address;
+    private nint _LiteralReplacement_14073e903_Address;
+    private nint _LiteralReplacement_14073d3f4_Address;
+    private nint _LiteralReplacement_1409f00b6_Address;
+    private nint _LiteralReplacement_140ad2dee_Address;
+    private nint _LiteralReplacement_140ad3b24_Address;
+    private nint _LiteralReplacement_140ad98bf_Address;
+    private nint _LiteralReplacement_140ad9b6b_Address;
+    private nint _LiteralReplacement_140aedd0a_Address;
+    private nint _LiteralReplacement_140b110f2_Address;
+    private nint _LiteralReplacement_140d23a21_Address;
+    private nint _LiteralReplacement_140d23a57_Address;
+    private nint _LiteralReplacement_140d23af6_Address;
+    private nint _LiteralReplacement_140d6b831_Address;
+    private nint _LiteralReplacement_140d6b8e0_Address;
+    private nint _LiteralReplacement_140d6b9be_Address;
+    private nint _LiteralReplacement_140d6baaa_Address;
+    private nint _LiteralReplacement_140d6bd94_Address;
+    private nint _LiteralReplacement_140d73e36_Address;
+    private nint _LiteralReplacement_140e2bc3b_Address;
+    private nint _LiteralReplacement_140e2bc68_Address;
+    private nint _LiteralReplacement_14bc3c1c2_Address;
+
+
+    private ExternalMemory _memory;
     
     private readonly ScannerWrapper _scanner;
 
@@ -1318,9 +1370,107 @@ public class Mod : ModBase // <= Do not Remove.
                 address => _MOVZX_140fb0e30_Address = address);
             _scanner.Scan("LEA_140fb3803", "4C 8D 0D ?? ?? ?? ?? 0F B7 D7",
                 address => _LEA_140fb3803_Address = address);
+            
+            // Funny literal replacements
+            _scanner.Scan("LiteralReplacement_140fa4eda", "FF C0 3D 20 04 00 00 7C ?? 42 8D 04 6D 00 00 00 00",
+                address => _LiteralReplacement_140fa4eda_Address = address);
+            _scanner.Scan("LiteralReplacement_140faf7ed", "BF 20 04 00 00 0F 1F 40 00 66 66 0F 1F 84 ?? 00 00 00 00",
+                address => _LiteralReplacement_140faf7ed_Address = address);
+            _scanner.Scan("LiteralReplacement_140fb3814", "41 BB 20 04 00 00",
+                address => _LiteralReplacement_140fb3814_Address = address);
+            _scanner.Scan("LiteralReplacement_140fb3d43", "FF C0 3D 20 04 00 00 7C ?? 43 8D 04 ??",
+                address => _LiteralReplacement_140fb3d43_Address = address);
+            _scanner.Scan("LiteralReplacement_14076ff34", "49 8D 8D ?? ?? ?? ?? 49 8B 47 ??",
+                address => _LiteralReplacement_14076ff34_Address = address);
+            _scanner.Scan("LiteralReplacement_14073b876", "49 8D 95 ?? ?? ?? ?? 48 8B 48 ?? 8B 79 ?? 48 8D 4C 24 ?? E8 ?? ?? ?? ?? 48 8B 5C 24 ?? 48 8B CB E8 ?? ?? ?? ?? 48 8D 4B ?? E8 ?? ?? ?? ?? F3 0F 10 05 ?? ?? ?? ?? BA 01 00 00 00 44 89 7C 24 ?? 41 B9 6D 01 00 00",
+                address => _LiteralReplacement_14073b876_Address = address);
+            _scanner.Scan("LiteralReplacement_14073b458", "49 8D 95 ?? ?? ?? ?? 48 8B 48 ?? 8B 79 ?? 48 8D 4C 24 ?? E8 ?? ?? ?? ?? 48 8B 5C 24 ?? 48 8B CB E8 ?? ?? ?? ?? 48 8D 4B ?? E8 ?? ?? ?? ?? F3 0F 10 05 ?? ?? ?? ?? BA 01 00 00 00 44 89 7C 24 ?? 41 B9 6E 01 00 00",
+                address => _LiteralReplacement_14073b458_Address = address);
+            _scanner.Scan("LiteralReplacement_14073c1c6", "32 C9 BA 20 03 00 00",
+                address => _LiteralReplacement_14073c1c6_Address = address);
+            _scanner.Scan("LiteralReplacement_14076472e", "BA 1E 03 00 00 0F 1F 40 00 66 0F 1F 84 ?? 00 00 00 00",
+                address => _LiteralReplacement_14076472e_Address = address);
+            _scanner.Scan("LiteralReplacement_1407b9f6c", "BA 1E 03 00 00 4C 8D 0D ?? ?? ?? ??",
+                address => _LiteralReplacement_1407b9f6c_Address = address);
+            _scanner.Scan("LiteralReplacement_14080093d", "B9 1E 03 00 00 42 0F B7 54 ?? ??",
+                address => _LiteralReplacement_14080093d_Address = address);
+            _scanner.Scan("LiteralReplacement_140801ec9", "B9 1E 03 00 00 66 90",
+                address => _LiteralReplacement_140801ec9_Address = address);
+            _scanner.Scan("LiteralReplacement_140802097", "B9 1E 03 00 00 41 FF C6 48 83 C6 02",
+                address => _LiteralReplacement_140802097_Address = address);
+            _scanner.Scan("LiteralReplacement_140800b29", "B9 1E 03 00 00 41 FF C6 49 FF C7",
+                address => _LiteralReplacement_140800b29_Address = address);
+            _scanner.Scan("LiteralReplacement_1407ba0c1", "BA 1E 03 00 00 FF C3",
+                address => _LiteralReplacement_1407ba0c1_Address = address);
+            _scanner.Scan("LiteralReplacement_140764905", "BA 1E 03 00 00 41 FF C6",
+                address => _LiteralReplacement_140764905_Address = address);
+            _scanner.Scan("LiteralReplacement_1408073f8", "48 8D 44 24 ?? 41 B9 1E 03 00 00",
+                address => _LiteralReplacement_1408073f8_Address = address);
+            _scanner.Scan("LiteralReplacement_140808dab", "4C 89 6D ?? B9 1E 03 00 00",
+                address => _LiteralReplacement_140808dab_Address = address);
+            _scanner.Scan("LiteralReplacement_14080988e", "B9 1E 03 00 00 41 FF C6 49 FF C5",
+                address => _LiteralReplacement_14080988e_Address = address);
+            _scanner.Scan("LiteralReplacement_140b31f61", "4C 8D 6D ?? B9 1E 03 00 00",
+                address => _LiteralReplacement_140b31f61_Address = address);
+            _scanner.Scan("LiteralReplacement_140b3241f", "B9 1E 03 00 00 48 8B 7D ??",
+                address => _LiteralReplacement_140b3241f_Address = address);
+            _scanner.Scan("LiteralReplacement_140b32a23", "BA 1E 03 00 00 0F 1F 84 ?? 00 00 00 00",
+                address => _LiteralReplacement_140b32a23_Address = address);
+            _scanner.Scan("LiteralReplacement_140b32ec1", "BA 1E 03 00 00 41 FF C7",
+                address => _LiteralReplacement_140b32ec1_Address = address);
+            _scanner.Scan("LiteralReplacement_140b744d1", "B9 20 03 00 00 F3 44 0F 10 0D ?? ?? ?? ??",
+                address => _LiteralReplacement_140b744d1_Address = address);
+            _scanner.Scan("LiteralReplacement_140b74c2e", "B9 20 03 00 00 41 FF C7",
+                address => _LiteralReplacement_140b74c2e_Address = address);
+            _scanner.Scan("LiteralReplacement_140e16e8b", "81 FA 20 03 00 00 0F 83 ?? ?? ?? ??",
+                address => _LiteralReplacement_140e16e8b_Address = address);
+            _scanner.Scan("LiteralReplacement_140fb3d45", "3D 20 04 00 00 7C ?? 43 8D 04 ??",
+                address => _LiteralReplacement_140fb3d45_Address = address);
+            _scanner.Scan("LiteralReplacement_14073e903", "BB 20 04 00 00 48 8D 4D ??",
+                address => _LiteralReplacement_14073e903_Address = address);
+            _scanner.Scan("LiteralReplacement_14073d3f4", "BB 20 04 00 00 4C 89 A6 ?? ?? ?? ??",
+                address => _LiteralReplacement_14073d3f4_Address = address);
+            _scanner.Scan("LiteralReplacement_1409f00b6", "41 8B DF 41 BC 1E 03 00 00",
+                address => _LiteralReplacement_1409f00b6_Address = address);
+            _scanner.Scan("LiteralReplacement_140ad2dee", "48 89 5D ?? BA 1E 03 00 00",
+                address => _LiteralReplacement_140ad2dee_Address = address);
+            _scanner.Scan("LiteralReplacement_140ad3b24", "8B 4D ?? BA 1E 03 00 00",
+                address => _LiteralReplacement_140ad3b24_Address = address);
+            _scanner.Scan("LiteralReplacement_140ad98bf", "BE 1E 03 00 00 4C 89 9B ?? ?? ?? ??",
+                address => _LiteralReplacement_140ad98bf_Address = address);
+            _scanner.Scan("LiteralReplacement_140ad9b6b", "BE 1E 03 00 00 66 45 89 1C 24",
+                address => _LiteralReplacement_140ad9b6b_Address = address);
+            _scanner.Scan("LiteralReplacement_140aedd0a", "41 BB 1E 03 00 00",
+                address => _LiteralReplacement_140aedd0a_Address = address);
+            _scanner.Scan("LiteralReplacement_140b110f2", "41 BA 1E 03 00 00",
+                address => _LiteralReplacement_140b110f2_Address = address);
+            _scanner.Scan("LiteralReplacement_140d23a21", "B8 1E 04 00 00 8D 4B ??",
+                address => _LiteralReplacement_140d23a21_Address = address);
+            _scanner.Scan("LiteralReplacement_140d23a57", "B9 1E 03 00 00 8D 43 ??",
+                address => _LiteralReplacement_140d23a57_Address = address);
+            _scanner.Scan("LiteralReplacement_140d23af6", "B8 20 03 00 00 66 3B D8",
+                address => _LiteralReplacement_140d23af6_Address = address);
+            _scanner.Scan("LiteralReplacement_140d6b831", "B9 20 03 00 00 66 3B C1 73 ?? 0F B7 C0 48 8D 0C ?? 48 03 C9",
+                address => _LiteralReplacement_140d6b831_Address = address);
+            _scanner.Scan("LiteralReplacement_140d6b8e0", "B9 20 03 00 00 66 3B C1 73 ?? 0F B7 C0 48 8D 0C ?? 48 C1 E1 04",
+                address => _LiteralReplacement_140d6b8e0_Address = address);
+            _scanner.Scan("LiteralReplacement_140d6b9be", "B8 20 03 00 00 44 3B C0",
+                address => _LiteralReplacement_140d6b9be_Address = address);
+            _scanner.Scan("LiteralReplacement_140d6baaa", "B8 20 03 00 00 66 3B D0",
+                address => _LiteralReplacement_140d6baaa_Address = address);
+            _scanner.Scan("LiteralReplacement_140d6bd94", "B9 20 03 00 00 44 8B 42 ??",
+                address => _LiteralReplacement_140d6bd94_Address = address);
+            _scanner.Scan("LiteralReplacement_140d73e36", "B8 20 03 00 00 45 0F B7 94 ?? ?? ?? ?? ??",
+                address => _LiteralReplacement_140d73e36_Address = address);
+            _scanner.Scan("LiteralReplacement_140e2bc3b", "BA 1E 04 00 00",
+                address => _LiteralReplacement_140e2bc3b_Address = address);
+            _scanner.Scan("LiteralReplacement_140e2bc68", "BA 1E 03 00 00 8D 48 ?? 66 3B CA",
+                address => _LiteralReplacement_140e2bc68_Address = address);
+            _scanner.Scan("LiteralReplacement_14bc3c1c2", "BA 1E 03 00 00 8D 48 ?? 66 39 D1",
+                address => _LiteralReplacement_14bc3c1c2_Address = address);
 
             
-            /* _LEA_140fb3803_Address
+            /* _LiteralReplacement_14bc3c1c2_Address
             _scanner.Scan("NAMEGE", "PATTERNGE",
                 address => ADRESSGE = address);
                 */
@@ -1353,6 +1503,10 @@ public class Mod : ModBase // <= Do not Remove.
                     SkillElementLength, SkillElementLength);
                 Buffer.MemoryCopy(_pinnedActiveSkillData.Pointer + 22 * ActiveSkillDataLength, _pinnedActiveSkillData.Pointer + 1800 * ActiveSkillDataLength,
                     ActiveSkillDataLength, ActiveSkillDataLength);
+                
+                Log.Information($"1800 test info. Element: {_pinnedSkillElements.Pointer[1800 * SkillElementLength]}, activatibility: {_pinnedSkillElements.Pointer[1800 * SkillElementLength + 1]}, area type: {_pinnedActiveSkillData.Pointer[1800 * ActiveSkillDataLength + 4]}");
+
+                _memory = new(Process.GetCurrentProcess());
                 
                 AboardExclamationPoint();
             }
@@ -3021,9 +3175,202 @@ public class Mod : ModBase // <= Do not Remove.
             $"mov r9, {_customInstructionSetPointer + 2}"
         ]);
         
+        // Funny literal replacements
+        _customInstructionSetPointer = 0;
+        _customInstructionSetOffset = 0;
         
-        // _LEA_140fb3803_Address
+        CreateHook(_LiteralReplacement_140fa4eda_Address, [
+            "use64",
+            "inc eax",
+            $"cmp eax, {ExpandedSkillElementsLength}"
+        ]);
         
+        CreateHook(_LiteralReplacement_140faf7ed_Address, [
+            "use64",
+            $"mov edi, {ExpandedSkillElementsLength}"
+        ], AsmHookBehaviour.ExecuteAfter);
+        
+        CreateHook(_LiteralReplacement_140fb3814_Address, [
+            "use64",
+            $"mov r11d, {ExpandedSkillElementsLength}"
+        ], AsmHookBehaviour.ExecuteAfter);
+        
+        CreateHook(_LiteralReplacement_140fb3d43_Address, [
+            "use64",
+            "inc eax",
+            $"cmp eax, {ExpandedSkillElementsLength}"
+        ]);
+        
+        /*
+        CreateHook(_LiteralReplacement_14076ff34_Address, [ // May or may not be related. Something to do with skill activatibility
+            "use64",
+            $"lea rcx, [r13 + {ExpandedSkillElementsLength}]"
+        ]);
+        
+        CreateHook(_LiteralReplacement_14073b876_Address, [ // May or may not be related. Something to do with skill element
+            "use64",
+            $"lea rdx, [r13 + {ExpandedSkillElementsLength}]"
+        ]);
+        
+        CreateHook(_LiteralReplacement_14073b458_Address, [ // May or may not be related. Something to do with skill element
+            "use64",
+            $"lea rdx, [r13 + {ExpandedSkillElementsLength}]"
+        ]);
+        */
+        
+        CreateHook(_LiteralReplacement_14073c1c6_Address, [
+            "use64",
+            "xor cl, cl",
+            $"mov edx, {ExpandedActiveSkillDataLength}"
+        ]);
+        
+        CreateHook(_LiteralReplacement_14076472e_Address, [
+            "use64",
+            $"mov edx, {ExpandedActiveSkillDataLength - 1}"
+        ], AsmHookBehaviour.ExecuteAfter);
+        
+        CreateHook(_LiteralReplacement_1407b9f6c_Address, [
+            "use64",
+            $"mov edx, {ExpandedActiveSkillDataLength - 1}"
+        ], AsmHookBehaviour.ExecuteAfter);
+        
+        // Cannot replace this normally
+        _memory.Write((UIntPtr)_LiteralReplacement_14080093d_Address + 1, ExpandedActiveSkillDataLength - 1);
+        
+        CreateHook(_LiteralReplacement_140801ec9_Address, [
+            "use64",
+            $"mov ecx, {ExpandedActiveSkillDataLength - 1}"
+        ], AsmHookBehaviour.ExecuteAfter);
+        
+        _memory.Write((UIntPtr)_LiteralReplacement_140802097_Address + 1, ExpandedActiveSkillDataLength - 1);
+        
+        _memory.Write((UIntPtr)_LiteralReplacement_140800b29_Address + 1, ExpandedActiveSkillDataLength - 1);
+        
+        _memory.Write((UIntPtr)_LiteralReplacement_1407ba0c1_Address + 1, ExpandedActiveSkillDataLength - 1);
+        
+        _memory.Write((UIntPtr)_LiteralReplacement_140764905_Address + 1, ExpandedActiveSkillDataLength - 1);
+        
+        CreateHook(_LiteralReplacement_1408073f8_Address, [
+            "use64",
+            $"mov r9d, {ExpandedActiveSkillDataLength - 1}"
+        ], AsmHookBehaviour.ExecuteAfter);
+        
+        CreateHook(_LiteralReplacement_140808dab_Address, [
+            "use64",
+            $"mov ecx, {ExpandedActiveSkillDataLength - 1}"
+        ], AsmHookBehaviour.ExecuteAfter);
+        
+        _memory.Write((UIntPtr)_LiteralReplacement_14080988e_Address + 1, ExpandedActiveSkillDataLength - 1);
+        
+        CreateHook(_LiteralReplacement_140b31f61_Address, [
+            "use64",
+            $"mov ecx, {ExpandedActiveSkillDataLength - 1}"
+        ], AsmHookBehaviour.ExecuteAfter);
+        
+        _memory.Write((UIntPtr)_LiteralReplacement_140b3241f_Address + 1, ExpandedActiveSkillDataLength - 1);
+        
+        CreateHook(_LiteralReplacement_140b32a23_Address, [
+            "use64",
+            $"mov edx, {ExpandedActiveSkillDataLength - 1}"
+        ], AsmHookBehaviour.ExecuteAfter);
+        
+        _memory.Write((UIntPtr)_LiteralReplacement_140b32ec1_Address + 1, ExpandedActiveSkillDataLength - 1);
+        
+        _memory.Write((UIntPtr)_LiteralReplacement_140b744d1_Address + 1, ExpandedActiveSkillDataLength);
+        
+        _memory.Write((UIntPtr)_LiteralReplacement_140b74c2e_Address + 1, ExpandedActiveSkillDataLength);
+        
+        _memory.Write((UIntPtr)_LiteralReplacement_140e16e8b_Address + 2, ExpandedActiveSkillDataLength);
+        
+        _memory.Write((UIntPtr)_LiteralReplacement_140fb3d45_Address + 1, ExpandedSkillElementsLength);
+        
+        _memory.Write((UIntPtr)_LiteralReplacement_14073e903_Address + 1, ExpandedSkillElementsLength);
+        
+        _memory.Write((UIntPtr)_LiteralReplacement_14073d3f4_Address + 1, ExpandedSkillElementsLength);
+        
+        CreateHook(_LiteralReplacement_1409f00b6_Address, [
+            "use64",
+            $"mov r12d, {ExpandedActiveSkillDataLength - 1}"
+        ], AsmHookBehaviour.ExecuteAfter);
+        
+        CreateHook(_LiteralReplacement_140ad2dee_Address, [
+            "use64",
+            $"mov edx, {ExpandedActiveSkillDataLength - 1}"
+        ], AsmHookBehaviour.ExecuteAfter);
+        
+        CreateHook(_LiteralReplacement_140ad3b24_Address, [
+            "use64",
+            $"mov edx, {ExpandedActiveSkillDataLength - 1}"
+        ], AsmHookBehaviour.ExecuteAfter);
+        
+        CreateHook(_LiteralReplacement_140ad98bf_Address, [
+            "use64",
+            $"mov esi, {ExpandedActiveSkillDataLength - 1}"
+        ], AsmHookBehaviour.ExecuteAfter);
+        
+        CreateHook(_LiteralReplacement_140ad9b6b_Address, [
+            "use64",
+            $"mov esi, {ExpandedActiveSkillDataLength - 1}"
+        ], AsmHookBehaviour.ExecuteAfter);
+        
+        CreateHook(_LiteralReplacement_140aedd0a_Address, [
+            "use64",
+            $"mov r11d, {ExpandedActiveSkillDataLength - 1}"
+        ], AsmHookBehaviour.ExecuteAfter);
+        
+        CreateHook(_LiteralReplacement_140b110f2_Address, [
+            "use64",
+            $"mov r10d, {ExpandedActiveSkillDataLength - 1}"
+        ], AsmHookBehaviour.ExecuteAfter);
+        
+        CreateHook(_LiteralReplacement_140d23a21_Address, [
+            "use64",
+            $"mov eax, {ExpandedSkillElementsLength - 2}"
+        ], AsmHookBehaviour.ExecuteAfter);
+        
+        CreateHook(_LiteralReplacement_140d23a57_Address, [
+            "use64",
+            $"mov ecx, {ExpandedActiveSkillDataLength - 2}"
+        ], AsmHookBehaviour.ExecuteAfter);
+        
+        _memory.Write((UIntPtr)_LiteralReplacement_140d23af6_Address + 1, ExpandedActiveSkillDataLength);
+        
+        _memory.Write((UIntPtr)_LiteralReplacement_140d6b831_Address + 1, ExpandedActiveSkillDataLength);
+        
+        _memory.Write((UIntPtr)_LiteralReplacement_140d6b8e0_Address + 1, ExpandedActiveSkillDataLength);
+        
+        _memory.Write((UIntPtr)_LiteralReplacement_140d6b9be_Address + 1, ExpandedActiveSkillDataLength);
+        
+        _memory.Write((UIntPtr)_LiteralReplacement_140d6baaa_Address + 1, ExpandedActiveSkillDataLength);
+        
+        CreateHook(_LiteralReplacement_140d6bd94_Address, [
+            "use64",
+            $"mov ecx, {ExpandedActiveSkillDataLength}"
+        ], AsmHookBehaviour.ExecuteAfter);
+        
+        CreateHook(_LiteralReplacement_140d73e36_Address, [
+            "use64",
+            $"mov eax, {ExpandedActiveSkillDataLength}"
+        ], AsmHookBehaviour.ExecuteAfter);
+        
+        CreateHook(_LiteralReplacement_140e2bc3b_Address, [
+            "use64",
+            $"mov edx, {ExpandedSkillElementsLength - 2}"
+        ], AsmHookBehaviour.ExecuteAfter);
+        
+        CreateHook(_LiteralReplacement_140e2bc68_Address, [
+            "use64",
+            $"mov edx, {ExpandedActiveSkillDataLength - 2}"
+        ], AsmHookBehaviour.ExecuteAfter);
+        
+        CreateHook(_LiteralReplacement_14bc3c1c2_Address, [
+            "use64",
+            $"mov edx, {ExpandedActiveSkillDataLength - 2}"
+        ], AsmHookBehaviour.ExecuteAfter);
+        
+
+        // _LiteralReplacement_14bc3c1c2_Address
+
         // fsadfjsdjflksjfdokjsfdj
     }
     
