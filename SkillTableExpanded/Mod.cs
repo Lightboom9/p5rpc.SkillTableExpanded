@@ -55,12 +55,12 @@ public class Mod : ModBase // <= Do not Remove.
 
     private const uint SkillElementLength = 8;
     private const uint ActiveSkillDataLength = 48;
-    
-    private const uint VanillaSkillElementsLength = 1056;
-    private const uint VanillaActiveSkillDataLength = 800;
+    private const uint ExpandedSkillSlotCount = 2502;
+    private const uint ExpandedTableSkillSlotCount = 2500;
 
-    private const uint ExpandedSkillSlotAmount = 2502;
-    private const uint ExpandedTableLength = 2500;
+    private const uint TechnicalComboMapLength = 40;
+    private const uint VanillaTechnicalComboMapsCount = 17;
+    private const uint ExpandedTechnicalComboMapsCount = 50;
     
     
     [Function(CallingConventions.Microsoft)]
@@ -399,7 +399,7 @@ public class Mod : ModBase // <= Do not Remove.
     // Segment 0
     private nint _DAT_142260b80_Address; // Starting address of Segment 0 of SKILL.TBL in memory
     
-    // For DATx142260b80
+    // For DAT_142260b80
     private nint _LEA_14071a1ce_Address;
     private nint _LEA_14071a445_Address;
     private nint _LEA_14073acb7_Address;
@@ -457,7 +457,7 @@ public class Mod : ModBase // <= Do not Remove.
     private nint _LEA_140fb8094_Address;
     private nint _LEA_141780647_Address;
     
-    // For DATx142260b81
+    // For DAT_142260b81
     private nint _CMP_14077033f_Address;
     private nint _CMP_140883791_Address;
     private nint _CMP_14088459c_Address;
@@ -467,7 +467,7 @@ public class Mod : ModBase // <= Do not Remove.
     private nint _LEA_140e35393_Address;
     private nint _CMP_14177b599_Address;
     
-    // For DATx142260b82
+    // For DAT_142260b82
     private nint _MOVZX_140fa4eba_Address;
     private nint _CMP_140fa4ec6_Address;
     private nint _LEA_140faf2c4_Address;
@@ -478,14 +478,11 @@ public class Mod : ModBase // <= Do not Remove.
     private nint _MOVZX_140fb0e30_Address;
     private nint _LEA_140fb3803_Address;
     
-    // Funny literal replacements
+    // Funny literal replacements for skill elements and active skill data
     private nint _LiteralReplacement_140fa4eda_Address;
     private nint _LiteralReplacement_140faf7ed_Address;
     private nint _LiteralReplacement_140fb3814_Address;
     private nint _LiteralReplacement_140fb3d43_Address;
-    private nint _LiteralReplacement_14076ff34_Address;
-    private nint _LiteralReplacement_14073b876_Address;
-    private nint _LiteralReplacement_14073b458_Address;
     private nint _LiteralReplacement_14073c1c6_Address;
     private nint _LiteralReplacement_14076472e_Address;
     private nint _LiteralReplacement_1407b9f6c_Address;
@@ -527,6 +524,23 @@ public class Mod : ModBase // <= Do not Remove.
     private nint _LiteralReplacement_140e2bc3b_Address;
     private nint _LiteralReplacement_140e2bc68_Address;
     private nint _LiteralReplacement_14bc3c1c2_Address;
+    
+    // Segment 2
+    private nint _DAT_1422301f0_Address; // Starting address of Segment 2 of SKILL.TBL in memory
+    
+    // For SkillTblTechnicalComboMaps
+    private nint _LEA_14076f1ab_Address;
+    private nint _LEA_14076f23c_Address;
+    private nint _LEA_140e32c58_Address;
+    private nint _LEA_140e32cc3_Address;
+    private nint _LEA_140e3306f_Address;
+    private nint _LEA_140e331cf_Address;
+    
+    // For TechnicalComboMapsCount
+    private nint _MOVZX_14076f1fc_Address;
+    private nint _MOVZX_140e32c3e_Address;
+    private nint _MOVZX_140e33058_Address;
+    private nint _MOVZX_140e331b8_Address;
 
 
     private string _expandedTablePath = "";
@@ -538,11 +552,15 @@ public class Mod : ModBase // <= Do not Remove.
     private readonly List<string> _customInstructionSetList = new();
     private readonly List<IAsmHook> _asmHooks = new();
     
-    private readonly Pinnable<byte> _pinnedSkillElements = new(new byte[ExpandedSkillSlotAmount * SkillElementLength]);
+    private readonly Pinnable<byte> _pinnedSkillElements = new(new byte[ExpandedSkillSlotCount * SkillElementLength]);
     private long _skillElementsOffset;
     
-    private readonly Pinnable<byte> _pinnedActiveSkillData = new(new byte[ExpandedSkillSlotAmount * ActiveSkillDataLength]);
+    private readonly Pinnable<byte> _pinnedActiveSkillData = new(new byte[ExpandedSkillSlotCount * ActiveSkillDataLength]);
     private long _activeSkillDataOffset;
+
+    private bool _replaceTechnicalComboMaps;
+    private readonly Pinnable<byte> _pinnedTechnicalComboMaps = new(new byte[ExpandedTechnicalComboMapsCount * TechnicalComboMapLength]);
+    private long _technicalComboMapsOffset;
 
     private long _customInstructionSetPointer;
     private long _customInstructionSetOffset;
@@ -1432,14 +1450,6 @@ public class Mod : ModBase // <= Do not Remove.
             address => _LiteralReplacement_140fb3814_Address = address);
         _scanner.Scan("LiteralReplacement_140fb3d43", "FF C0 3D 20 04 00 00 7C ?? 43 8D 04 ??",
             address => _LiteralReplacement_140fb3d43_Address = address);
-        _scanner.Scan("LiteralReplacement_14076ff34", "49 8D 8D ?? ?? ?? ?? 49 8B 47 ??",
-            address => _LiteralReplacement_14076ff34_Address = address);
-        _scanner.Scan("LiteralReplacement_14073b876",
-            "49 8D 95 ?? ?? ?? ?? 48 8B 48 ?? 8B 79 ?? 48 8D 4C 24 ?? E8 ?? ?? ?? ?? 48 8B 5C 24 ?? 48 8B CB E8 ?? ?? ?? ?? 48 8D 4B ?? E8 ?? ?? ?? ?? F3 0F 10 05 ?? ?? ?? ?? BA 01 00 00 00 44 89 7C 24 ?? 41 B9 6D 01 00 00",
-            address => _LiteralReplacement_14073b876_Address = address);
-        _scanner.Scan("LiteralReplacement_14073b458",
-            "49 8D 95 ?? ?? ?? ?? 48 8B 48 ?? 8B 79 ?? 48 8D 4C 24 ?? E8 ?? ?? ?? ?? 48 8B 5C 24 ?? 48 8B CB E8 ?? ?? ?? ?? 48 8D 4B ?? E8 ?? ?? ?? ?? F3 0F 10 05 ?? ?? ?? ?? BA 01 00 00 00 44 89 7C 24 ?? 41 B9 6E 01 00 00",
-            address => _LiteralReplacement_14073b458_Address = address);
         _scanner.Scan("LiteralReplacement_14073c1c6", "32 C9 BA 20 03 00 00",
             address => _LiteralReplacement_14073c1c6_Address = address);
         _scanner.Scan("LiteralReplacement_14076472e", "BA 1E 03 00 00 0F 1F 40 00 66 0F 1F 84 ?? 00 00 00 00",
@@ -1522,9 +1532,37 @@ public class Mod : ModBase // <= Do not Remove.
             address => _LiteralReplacement_140e2bc68_Address = address);
         _scanner.Scan("LiteralReplacement_14bc3c1c2", "BA 1E 03 00 00 8D 48 ?? 66 39 D1",
             address => _LiteralReplacement_14bc3c1c2_Address = address);
+        
+        // Segment 2
+        _scanner.ScanForData("DAT_1422301f0", "4C 8D 0D ?? ?? ?? ?? 4C 8D 15 ?? ?? ?? ?? 0F 1F 80 00 00 00 00", 7, 3, 0,
+            address => _DAT_1422301f0_Address = address);
+        
+        // For SkillTblTechnicalComboMaps
+        _scanner.Scan("LEA_14076f1ab", "4C 8D 0D ?? ?? ?? ?? 4C 8D 15 ?? ?? ?? ?? 0F 1F 80 00 00 00 00",
+            address => _LEA_14076f1ab_Address = address);
+        _scanner.Scan("LEA_14076f23c", "4C 8D 0D ?? ?? ?? ?? FF C6 48 FF C7",
+            address => _LEA_14076f23c_Address = address);
+        _scanner.Scan("LEA_140e32c58", "48 8D 1D ?? ?? ?? ?? 4C 8D 25 ?? ?? ?? ?? 66 66 0F 1F 84 ?? 00 00 00 00",
+            address => _LEA_140e32c58_Address = address);
+        _scanner.Scan("LEA_140e32cc3", "49 8D 84 24 ?? ?? ?? ?? 48 8D 04 ??",
+            address => _LEA_140e32cc3_Address = address);
+        _scanner.Scan("LEA_140e3306f", "48 8D 1D ?? ?? ?? ?? 4C 8D 3D ?? ?? ?? ?? 0F 1F 00 8B 43 ??",
+            address => _LEA_140e3306f_Address = address);
+        _scanner.Scan("LEA_140e331cf", "48 8D 1D ?? ?? ?? ?? 4C 8D 3D ?? ?? ?? ?? 0F 1F 00 44 3B 73 ??",
+            address => _LEA_140e331cf_Address = address);
+        
+        // For TechnicalComboMapsCount
+        _scanner.Scan("MOVZX_14076f1fc", "44 0F B7 35 ?? ?? ?? ?? 33 F6 45 8B 38",
+            address => _MOVZX_14076f1fc_Address = address);
+        _scanner.Scan("MOVZX_140e32c3e", "44 0F B7 35 ?? ?? ?? ?? 33 F6 8B EA",
+            address => _MOVZX_140e32c3e_Address = address);
+        _scanner.Scan("MOVZX_140e33058", "0F B7 2D ?? ?? ?? ?? 4C 8B F1",
+            address => _MOVZX_140e33058_Address = address);
+        _scanner.Scan("MOVZX_140e331b8", "0F B7 2D ?? ?? ?? ?? 44 8B F1",
+            address => _MOVZX_140e331b8_Address = address);
 
 
-        /* _LiteralReplacement_14bc3c1c2_Address
+        /* _MOVZX_140e331b8_Address
         _scanner.Scan("NAMEGE", "PATTERNGE",
             address => ADRESSGE = address);
             */
@@ -1539,14 +1577,14 @@ public class Mod : ModBase // <= Do not Remove.
         
         using var binaryReader = new BigEndianBinaryReader(readStream);
         
-        // Version. Currently unused
-        binaryReader.ReadUInt32();
+        // Version
+        var version = binaryReader.ReadUInt32();
         
         // Size of skill elements segment. Actually of no interest here as the length is hardcoded
         binaryReader.ReadUInt32();
         
         var pSkillElements = _pinnedSkillElements.Pointer;
-        for (var i = 0; i < ExpandedTableLength; i++)
+        for (var i = 0; i < ExpandedTableSkillSlotCount; i++)
         {
             // Element
             *pSkillElements = binaryReader.ReadByte();
@@ -1576,7 +1614,7 @@ public class Mod : ModBase // <= Do not Remove.
         binaryReader.ReadUInt32();
 
         var pActiveSkillData = _pinnedActiveSkillData.Pointer;
-        for (var i = 0; i < ExpandedTableLength; i++)
+        for (var i = 0; i < ExpandedTableSkillSlotCount; i++)
         {
             // Flags
             WriteBytesToPointer(pActiveSkillData, binaryReader.ReadBytesAndReverse(4));
@@ -1691,6 +1729,64 @@ public class Mod : ModBase // <= Do not Remove.
             pActiveSkillData++;
         }
         
+        // Alignment
+        binaryReader.ReadBytes(12);
+
+        if (version >= 2)
+        {
+            _replaceTechnicalComboMaps = true;
+            
+            // Size of technical combo maps segment
+            binaryReader.ReadUInt32();
+            
+            var pTechnicalComboMaps = _pinnedTechnicalComboMaps.Pointer;
+            for (var i = 0; i < ExpandedTechnicalComboMapsCount; i++)
+            {
+                // Applicable ailments
+                WriteBytesToPointer(pTechnicalComboMaps, binaryReader.ReadBytesAndReverse(4));
+                pTechnicalComboMaps += 4;
+                
+                // All affinities are technical
+                WriteBytesToPointer(pTechnicalComboMaps, binaryReader.ReadBytesAndReverse(4));
+                pTechnicalComboMaps += 4;
+                
+                // Technical affinity 1
+                WriteBytesToPointer(pTechnicalComboMaps, binaryReader.ReadBytesAndReverse(4));
+                pTechnicalComboMaps += 4;
+                
+                // Technical affinity 2
+                WriteBytesToPointer(pTechnicalComboMaps, binaryReader.ReadBytesAndReverse(4));
+                pTechnicalComboMaps += 4;
+                
+                // Technical affinity 3
+                WriteBytesToPointer(pTechnicalComboMaps, binaryReader.ReadBytesAndReverse(4));
+                pTechnicalComboMaps += 4;
+                
+                // Technical affinity 4
+                WriteBytesToPointer(pTechnicalComboMaps, binaryReader.ReadBytesAndReverse(4));
+                pTechnicalComboMaps += 4;
+                
+                // Technical affinity 5
+                WriteBytesToPointer(pTechnicalComboMaps, binaryReader.ReadBytesAndReverse(4));
+                pTechnicalComboMaps += 4;
+                
+                // Damage multiplier
+                WriteBytesToPointer(pTechnicalComboMaps, binaryReader.ReadBytesAndReverse(4));
+                pTechnicalComboMaps += 4;
+                
+                // Unused
+                WriteBytesToPointer(pTechnicalComboMaps, binaryReader.ReadBytesAndReverse(4));
+                pTechnicalComboMaps += 4;
+                
+                // Requires Knowing the Heart
+                WriteBytesToPointer(pTechnicalComboMaps, binaryReader.ReadBytesAndReverse(4));
+                pTechnicalComboMaps += 4;
+            }
+            
+            // Alignment
+            binaryReader.ReadBytes(12);
+        }
+        
         Log.Information("Expanded skill table loaded.");
     }
 
@@ -1714,8 +1810,6 @@ public class Mod : ModBase // <= Do not Remove.
         {
             if (plVar5[1] != 0)
             {
-                Log.Information("SKILL.TBL loaded and ready!");
-
                 if (string.IsNullOrEmpty(_expandedTablePath))
                 {
                     Log.Information("No expanded skill table found.");
@@ -1727,6 +1821,7 @@ public class Mod : ModBase // <= Do not Remove.
                 
                 _skillElementsOffset = (long)_pinnedSkillElements.Pointer - _DAT_142260b80_Address;
                 _activeSkillDataOffset = (long)_pinnedActiveSkillData.Pointer - _DAT_142226bf0_Address;
+                _technicalComboMapsOffset = (long)_pinnedTechnicalComboMaps.Pointer - _DAT_1422301f0_Address;
                 
                 /*
                 Buffer.MemoryCopy((byte*)_DAT_142260b80_Address, _pinnedSkillElements.Pointer,
@@ -1736,6 +1831,9 @@ public class Mod : ModBase // <= Do not Remove.
                 Buffer.MemoryCopy((byte*)_DAT_142226bf0_Address, _pinnedActiveSkillData.Pointer,
                     VanillaActiveSkillDataLength * ActiveSkillDataLength, VanillaActiveSkillDataLength * ActiveSkillDataLength);
                 _activeSkillDataOffset = (long)_pinnedActiveSkillData.Pointer - _DAT_142226bf0_Address;
+                
+                Buffer.MemoryCopy((byte*)_DAT_1422301f0_Address, _pinnedTechnicalComboMaps.Pointer,
+                    VanillaTechnicalComboMapsCount * TechnicalComboMapLength, VanillaTechnicalComboMapsCount * TechnicalComboMapLength);
 
                 Log.Information("We do a little tomfoolery. Replacing bytes for skill id 1800 with bytes of 22 (Bufudyne)");
                 Buffer.MemoryCopy(_pinnedSkillElements.Pointer + 22 * SkillElementLength, _pinnedSkillElements.Pointer + 1800 * SkillElementLength,
@@ -3423,194 +3521,238 @@ public class Mod : ModBase // <= Do not Remove.
         CreateHook(_LiteralReplacement_140fa4eda_Address, [
             "use64",
             "inc eax",
-            $"cmp eax, {ExpandedSkillSlotAmount}"
+            $"cmp eax, {ExpandedSkillSlotCount}"
         ]);
         
         CreateHook(_LiteralReplacement_140faf7ed_Address, [
             "use64",
-            $"mov edi, {ExpandedSkillSlotAmount}"
+            $"mov edi, {ExpandedSkillSlotCount}"
         ], AsmHookBehaviour.ExecuteAfter);
         
         CreateHook(_LiteralReplacement_140fb3814_Address, [
             "use64",
-            $"mov r11d, {ExpandedSkillSlotAmount}"
+            $"mov r11d, {ExpandedSkillSlotCount}"
         ], AsmHookBehaviour.ExecuteAfter);
         
         CreateHook(_LiteralReplacement_140fb3d43_Address, [
             "use64",
             "inc eax",
-            $"cmp eax, {ExpandedSkillSlotAmount}"
+            $"cmp eax, {ExpandedSkillSlotCount}"
         ]);
-        
-        /*
-        CreateHook(_LiteralReplacement_14076ff34_Address, [ // May or may not be related. Something to do with skill activatibility
-            "use64",
-            $"lea rcx, [r13 + {ExpandedSkillSlotAmount}]"
-        ]);
-        
-        CreateHook(_LiteralReplacement_14073b876_Address, [ // May or may not be related. Something to do with skill element
-            "use64",
-            $"lea rdx, [r13 + {ExpandedSkillSlotAmount}]"
-        ]);
-        
-        CreateHook(_LiteralReplacement_14073b458_Address, [ // May or may not be related. Something to do with skill element
-            "use64",
-            $"lea rdx, [r13 + {ExpandedSkillSlotAmount}]"
-        ]);
-        */
         
         CreateHook(_LiteralReplacement_14073c1c6_Address, [
             "use64",
             "xor cl, cl",
-            $"mov edx, {ExpandedSkillSlotAmount}"
+            $"mov edx, {ExpandedSkillSlotCount}"
         ]);
         
         CreateHook(_LiteralReplacement_14076472e_Address, [
             "use64",
-            $"mov edx, {ExpandedSkillSlotAmount - 1}"
+            $"mov edx, {ExpandedSkillSlotCount - 1}"
         ], AsmHookBehaviour.ExecuteAfter);
         
         CreateHook(_LiteralReplacement_1407b9f6c_Address, [
             "use64",
-            $"mov edx, {ExpandedSkillSlotAmount - 1}"
+            $"mov edx, {ExpandedSkillSlotCount - 1}"
         ], AsmHookBehaviour.ExecuteAfter);
         
         // Cannot replace this normally
-        _memory.Write((UIntPtr)_LiteralReplacement_14080093d_Address + 1, ExpandedSkillSlotAmount - 1);
+        _memory.Write((UIntPtr)_LiteralReplacement_14080093d_Address + 1, ExpandedSkillSlotCount - 1);
         
         CreateHook(_LiteralReplacement_140801ec9_Address, [
             "use64",
-            $"mov ecx, {ExpandedSkillSlotAmount - 1}"
+            $"mov ecx, {ExpandedSkillSlotCount - 1}"
         ], AsmHookBehaviour.ExecuteAfter);
         
-        _memory.Write((UIntPtr)_LiteralReplacement_140802097_Address + 1, ExpandedSkillSlotAmount - 1);
+        _memory.Write((UIntPtr)_LiteralReplacement_140802097_Address + 1, ExpandedSkillSlotCount - 1);
         
-        _memory.Write((UIntPtr)_LiteralReplacement_140800b29_Address + 1, ExpandedSkillSlotAmount - 1);
+        _memory.Write((UIntPtr)_LiteralReplacement_140800b29_Address + 1, ExpandedSkillSlotCount - 1);
         
-        _memory.Write((UIntPtr)_LiteralReplacement_1407ba0c1_Address + 1, ExpandedSkillSlotAmount - 1);
+        _memory.Write((UIntPtr)_LiteralReplacement_1407ba0c1_Address + 1, ExpandedSkillSlotCount - 1);
         
-        _memory.Write((UIntPtr)_LiteralReplacement_140764905_Address + 1, ExpandedSkillSlotAmount - 1);
+        _memory.Write((UIntPtr)_LiteralReplacement_140764905_Address + 1, ExpandedSkillSlotCount - 1);
         
         CreateHook(_LiteralReplacement_1408073f8_Address, [
             "use64",
-            $"mov r9d, {ExpandedSkillSlotAmount - 1}"
+            $"mov r9d, {ExpandedSkillSlotCount - 1}"
         ], AsmHookBehaviour.ExecuteAfter);
         
         CreateHook(_LiteralReplacement_140808dab_Address, [
             "use64",
-            $"mov ecx, {ExpandedSkillSlotAmount - 1}"
+            $"mov ecx, {ExpandedSkillSlotCount - 1}"
         ], AsmHookBehaviour.ExecuteAfter);
         
-        _memory.Write((UIntPtr)_LiteralReplacement_14080988e_Address + 1, ExpandedSkillSlotAmount - 1);
+        _memory.Write((UIntPtr)_LiteralReplacement_14080988e_Address + 1, ExpandedSkillSlotCount - 1);
         
         CreateHook(_LiteralReplacement_140b31f61_Address, [
             "use64",
-            $"mov ecx, {ExpandedSkillSlotAmount - 1}"
+            $"mov ecx, {ExpandedSkillSlotCount - 1}"
         ], AsmHookBehaviour.ExecuteAfter);
         
-        _memory.Write((UIntPtr)_LiteralReplacement_140b3241f_Address + 1, ExpandedSkillSlotAmount - 1);
+        _memory.Write((UIntPtr)_LiteralReplacement_140b3241f_Address + 1, ExpandedSkillSlotCount - 1);
         
         CreateHook(_LiteralReplacement_140b32a23_Address, [
             "use64",
-            $"mov edx, {ExpandedSkillSlotAmount - 1}"
+            $"mov edx, {ExpandedSkillSlotCount - 1}"
         ], AsmHookBehaviour.ExecuteAfter);
         
-        _memory.Write((UIntPtr)_LiteralReplacement_140b32ec1_Address + 1, ExpandedSkillSlotAmount - 1);
+        _memory.Write((UIntPtr)_LiteralReplacement_140b32ec1_Address + 1, ExpandedSkillSlotCount - 1);
         
-        _memory.Write((UIntPtr)_LiteralReplacement_140b744d1_Address + 1, ExpandedSkillSlotAmount);
+        _memory.Write((UIntPtr)_LiteralReplacement_140b744d1_Address + 1, ExpandedSkillSlotCount);
         
-        _memory.Write((UIntPtr)_LiteralReplacement_140b74c2e_Address + 1, ExpandedSkillSlotAmount);
+        _memory.Write((UIntPtr)_LiteralReplacement_140b74c2e_Address + 1, ExpandedSkillSlotCount);
         
-        _memory.Write((UIntPtr)_LiteralReplacement_140e16e8b_Address + 2, ExpandedSkillSlotAmount);
+        _memory.Write((UIntPtr)_LiteralReplacement_140e16e8b_Address + 2, ExpandedSkillSlotCount);
         
-        _memory.Write((UIntPtr)_LiteralReplacement_140fb3d45_Address + 1, ExpandedSkillSlotAmount);
+        _memory.Write((UIntPtr)_LiteralReplacement_140fb3d45_Address + 1, ExpandedSkillSlotCount);
         
-        _memory.Write((UIntPtr)_LiteralReplacement_14073e903_Address + 1, ExpandedSkillSlotAmount);
+        _memory.Write((UIntPtr)_LiteralReplacement_14073e903_Address + 1, ExpandedSkillSlotCount);
         
-        _memory.Write((UIntPtr)_LiteralReplacement_14073d3f4_Address + 1, ExpandedSkillSlotAmount);
+        _memory.Write((UIntPtr)_LiteralReplacement_14073d3f4_Address + 1, ExpandedSkillSlotCount);
         
         CreateHook(_LiteralReplacement_1409f00b6_Address, [
             "use64",
-            $"mov r12d, {ExpandedSkillSlotAmount - 1}"
+            $"mov r12d, {ExpandedSkillSlotCount - 1}"
         ], AsmHookBehaviour.ExecuteAfter);
         
         CreateHook(_LiteralReplacement_140ad2dee_Address, [
             "use64",
-            $"mov edx, {ExpandedSkillSlotAmount - 1}"
+            $"mov edx, {ExpandedSkillSlotCount - 1}"
         ], AsmHookBehaviour.ExecuteAfter);
         
         CreateHook(_LiteralReplacement_140ad3b24_Address, [
             "use64",
-            $"mov edx, {ExpandedSkillSlotAmount - 1}"
+            $"mov edx, {ExpandedSkillSlotCount - 1}"
         ], AsmHookBehaviour.ExecuteAfter);
         
         CreateHook(_LiteralReplacement_140ad98bf_Address, [
             "use64",
-            $"mov esi, {ExpandedSkillSlotAmount - 1}"
+            $"mov esi, {ExpandedSkillSlotCount - 1}"
         ], AsmHookBehaviour.ExecuteAfter);
         
         CreateHook(_LiteralReplacement_140ad9b6b_Address, [
             "use64",
-            $"mov esi, {ExpandedSkillSlotAmount - 1}"
+            $"mov esi, {ExpandedSkillSlotCount - 1}"
         ], AsmHookBehaviour.ExecuteAfter);
         
         CreateHook(_LiteralReplacement_140aedd0a_Address, [
             "use64",
-            $"mov r11d, {ExpandedSkillSlotAmount - 1}"
+            $"mov r11d, {ExpandedSkillSlotCount - 1}"
         ], AsmHookBehaviour.ExecuteAfter);
         
         CreateHook(_LiteralReplacement_140b110f2_Address, [
             "use64",
-            $"mov r10d, {ExpandedSkillSlotAmount - 1}"
+            $"mov r10d, {ExpandedSkillSlotCount - 1}"
         ], AsmHookBehaviour.ExecuteAfter);
         
         CreateHook(_LiteralReplacement_140d23a21_Address, [
             "use64",
-            $"mov eax, {ExpandedSkillSlotAmount - 2}"
+            $"mov eax, {ExpandedSkillSlotCount - 2}"
         ], AsmHookBehaviour.ExecuteAfter);
         
         CreateHook(_LiteralReplacement_140d23a57_Address, [
             "use64",
-            $"mov ecx, {ExpandedSkillSlotAmount - 2}"
+            $"mov ecx, {ExpandedSkillSlotCount - 2}"
         ], AsmHookBehaviour.ExecuteAfter);
         
-        _memory.Write((UIntPtr)_LiteralReplacement_140d23af6_Address + 1, ExpandedSkillSlotAmount);
+        _memory.Write((UIntPtr)_LiteralReplacement_140d23af6_Address + 1, ExpandedSkillSlotCount);
         
-        _memory.Write((UIntPtr)_LiteralReplacement_140d6b831_Address + 1, ExpandedSkillSlotAmount);
+        _memory.Write((UIntPtr)_LiteralReplacement_140d6b831_Address + 1, ExpandedSkillSlotCount);
         
-        _memory.Write((UIntPtr)_LiteralReplacement_140d6b8e0_Address + 1, ExpandedSkillSlotAmount);
+        _memory.Write((UIntPtr)_LiteralReplacement_140d6b8e0_Address + 1, ExpandedSkillSlotCount);
         
-        _memory.Write((UIntPtr)_LiteralReplacement_140d6b9be_Address + 1, ExpandedSkillSlotAmount);
+        _memory.Write((UIntPtr)_LiteralReplacement_140d6b9be_Address + 1, ExpandedSkillSlotCount);
         
-        _memory.Write((UIntPtr)_LiteralReplacement_140d6baaa_Address + 1, ExpandedSkillSlotAmount);
+        _memory.Write((UIntPtr)_LiteralReplacement_140d6baaa_Address + 1, ExpandedSkillSlotCount);
         
         CreateHook(_LiteralReplacement_140d6bd94_Address, [
             "use64",
-            $"mov ecx, {ExpandedSkillSlotAmount}"
+            $"mov ecx, {ExpandedSkillSlotCount}"
         ], AsmHookBehaviour.ExecuteAfter);
         
         CreateHook(_LiteralReplacement_140d73e36_Address, [
             "use64",
-            $"mov eax, {ExpandedSkillSlotAmount}"
+            $"mov eax, {ExpandedSkillSlotCount}"
         ], AsmHookBehaviour.ExecuteAfter);
         
         CreateHook(_LiteralReplacement_140e2bc3b_Address, [
             "use64",
-            $"mov edx, {ExpandedSkillSlotAmount - 2}"
+            $"mov edx, {ExpandedSkillSlotCount - 2}"
         ], AsmHookBehaviour.ExecuteAfter);
         
         CreateHook(_LiteralReplacement_140e2bc68_Address, [
             "use64",
-            $"mov edx, {ExpandedSkillSlotAmount - 2}"
+            $"mov edx, {ExpandedSkillSlotCount - 2}"
         ], AsmHookBehaviour.ExecuteAfter);
         
         CreateHook(_LiteralReplacement_14bc3c1c2_Address, [
             "use64",
-            $"mov edx, {ExpandedSkillSlotAmount - 2}"
+            $"mov edx, {ExpandedSkillSlotCount - 2}"
         ], AsmHookBehaviour.ExecuteAfter);
+
+        if (!_replaceTechnicalComboMaps)
+        {
+            return;
+        }
+        
+        // Segment 2
+        _customInstructionSetPointer = (long)_pinnedTechnicalComboMaps.Pointer;
+        _customInstructionSetOffset = _technicalComboMapsOffset;
+        
+        // For SkillTblTechnicalComboMaps
+        CreateHook(_LEA_14076f1ab_Address, [
+            "use64",
+            $"mov r9, {_customInstructionSetPointer}"
+        ]);
+        
+        CreateHook(_LEA_14076f23c_Address, [
+            "use64",
+            $"mov r9, {_customInstructionSetPointer}"
+        ]);
+        
+        CreateHook(_LEA_140e32c58_Address, [
+            "use64",
+            $"mov rbx, {_customInstructionSetPointer + 4}"
+        ]);
+        
+        CreateHook(_LEA_140e32cc3_Address, [
+            "use64",
+            $"mov rax, {_customInstructionSetPointer}"
+        ]);
+        
+        CreateHook(_LEA_140e3306f_Address, [
+            "use64",
+            $"mov rbx, {_customInstructionSetPointer + 4}"
+        ]);
+        
+        CreateHook(_LEA_140e331cf_Address, [
+            "use64",
+            $"mov rbx, {_customInstructionSetPointer + 4}"
+        ]);
+        
+        // For TechnicalComboMapsCount
+        CreateHook(_MOVZX_14076f1fc_Address, [
+            "use64",
+            $"mov r14d, {ExpandedTechnicalComboMapsCount}"
+        ]);
+        
+        CreateHook(_MOVZX_140e32c3e_Address, [
+            "use64",
+            $"mov r14d, {ExpandedTechnicalComboMapsCount}"
+        ]);
+        
+        CreateHook(_MOVZX_140e33058_Address, [
+            "use64",
+            $"mov ebp, {ExpandedTechnicalComboMapsCount}"
+        ]);
+        
+        CreateHook(_MOVZX_140e331b8_Address, [
+            "use64",
+            $"mov ebp, {ExpandedTechnicalComboMapsCount}"
+        ]);
         
 
-        // _LiteralReplacement_14bc3c1c2_Address
+        // _MOVZX_140e331b8_Address
 
         // fsadfjsdjflksjfdokjsfdj
     }
