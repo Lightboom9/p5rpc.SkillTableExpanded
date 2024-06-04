@@ -53,11 +53,15 @@ public class Mod : ModBase // <= Do not Remove.
     private readonly IModConfig _modConfig;
 
 
-    private const uint SkillElementLength = 8;
-    private const uint ActiveSkillDataLength = 48;
     private const uint ExpandedSkillSlotCount = 2502;
     private const uint ExpandedTableSkillSlotCount = 2500;
-
+    
+    private const uint SkillElementLength = 8;
+    private const uint VanillaSkillElementsCount = 1056;
+    
+    private const uint ActiveSkillDataLength = 48;
+    private const uint VanillaActiveSkillDataCount = 800;
+    
     private const uint TechnicalComboMapLength = 40;
     private const uint VanillaTechnicalComboMapsCount = 17;
     private const uint ExpandedTechnicalComboMapsCount = 50;
@@ -543,7 +547,8 @@ public class Mod : ModBase // <= Do not Remove.
     private nint _MOVZX_140e331b8_Address;
 
 
-    private List<string> _expandedTablePaths = new();
+    // is an expanded table, path
+    private List<(bool, string)> _skillTableTuples = new();
     
     private ExternalMemory _memory;
     
@@ -579,7 +584,6 @@ public class Mod : ModBase // <= Do not Remove.
         
         Log.Initialize("p5rpc.SkillTableExpanded", _logger, Color.Orange);
         
-        _modLoader.ModLoading += OnModLoading;
         _modLoader.OnModLoaderInitialized += OnModLoaderInitialised;
 
         _modLoader.GetController<IStartupScanner>().TryGetTarget(out var scanner);
@@ -590,23 +594,40 @@ public class Mod : ModBase // <= Do not Remove.
     
     private void OnModLoaderInitialised()
     {
-        _modLoader.ModLoaded -= OnModLoading;
-    }
-
-    private void OnModLoading(IModV1 mod, IModConfigV1 modConfig)
-    {
-        if (modConfig.ModDependencies.Contains(_modConfig.ModId))
+        foreach (var activeMod in _modLoader.GetActiveMods())
         {
-            string modDir = _modLoader.GetDirectoryForModId(modConfig.ModId);
-            modDir = $"{modDir}{Path.DirectorySeparatorChar}ExpandedSkillTable";
-            if (Directory.Exists(modDir))
+            // SKILL.TBL
+            if (activeMod.Generic.ModDependencies.Contains("p5rpc.modloader"))
             {
-                var tablePath = $"{modDir}{Path.DirectorySeparatorChar}SKILL_EXPANDED.TBL";
-                if (File.Exists(tablePath))
+                var cpkDir = $"{_modLoader.GetDirectoryForModId(activeMod.Generic.ModId)}{Path.DirectorySeparatorChar}P5REssentials{Path.DirectorySeparatorChar}CPK";
+                if (Directory.Exists(cpkDir))
                 {
-                    _expandedTablePaths.Add(tablePath);
-                            
-                    Log.Information($"SKILL_EXPANDED.TBL found at: {tablePath}");
+                    foreach (var dir in Directory.GetDirectories(cpkDir))
+                    {
+                        var tableDir = $"{dir}{Path.DirectorySeparatorChar}BATTLE{Path.DirectorySeparatorChar}TABLE";
+                        if (Directory.Exists(tableDir))
+                        {
+                            var filePath = $"{tableDir}{Path.DirectorySeparatorChar}SKILL.TBL";
+                            if (File.Exists(filePath))
+                            {
+                                _skillTableTuples.Add((false, filePath));
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // SKILL_EXPANDED.TBL
+            if (activeMod.Generic.ModDependencies.Contains(_modConfig.ModId))
+            {
+                var estDir = $"{_modLoader.GetDirectoryForModId(activeMod.Generic.ModId)}{Path.DirectorySeparatorChar}ExpandedSkillTable";
+                if (Directory.Exists(estDir))
+                {
+                    var filePath = $"{estDir}{Path.DirectorySeparatorChar}SKILL_EXPANDED.TBL";
+                    if (File.Exists(filePath))
+                    {
+                        _skillTableTuples.Add((true, filePath));
+                    }
                 }
             }
         }
@@ -1567,25 +1588,29 @@ public class Mod : ModBase // <= Do not Remove.
         // fsadfjsdjflksjfdokjsfdj
     }
 
-    private unsafe uint LoadAndParseExpandedTableData(string filePath, byte* skillElementsPointer, byte* activeSkillDataPointer, byte* technicalComboMapsPointer)
+    private unsafe uint LoadAndParseExpandedTableData(bool isExpandedTable, string filePath, byte* skillElementsPointer, byte* activeSkillDataPointer, byte* technicalComboMapsPointer)
     {
-        using var readStream = File.Open(filePath, FileMode.Open);
+        using var readStream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
         
         using var binaryReader = new BigEndianBinaryReader(readStream);
-        
-        // Version
-        var version = binaryReader.ReadUInt32();
-        
-        // Alignment
-        if (version >= 3)
+
+        var version = 0U;
+        if (isExpandedTable)
         {
-            binaryReader.ReadBytes(12);
+            // Version
+            version = binaryReader.ReadUInt32();
+        
+            // Alignment
+            if (version >= 3)
+            {
+                binaryReader.ReadBytes(12);
+            }
         }
         
-        // Size of skill elements segment. Actually of no interest here as the length is hardcoded
-        binaryReader.ReadUInt32();
+        // Size of skill elements segment
+        var size = binaryReader.ReadUInt32();
         
-        for (var i = 0; i < ExpandedTableSkillSlotCount; i++)
+        for (var i = 0U; i < size; i += SkillElementLength)
         {
             // Element
             *skillElementsPointer = binaryReader.ReadByte();
@@ -1609,7 +1634,7 @@ public class Mod : ModBase // <= Do not Remove.
         }
         
         // Alignment
-        if (version >= 3)
+        if (version >= 3 || !isExpandedTable)
         {
             binaryReader.ReadBytes(12);
         }
@@ -1619,9 +1644,9 @@ public class Mod : ModBase // <= Do not Remove.
         }
         
         // Size of active skill data segment
-        binaryReader.ReadUInt32();
+        size = binaryReader.ReadUInt32();
         
-        for (var i = 0; i < ExpandedTableSkillSlotCount; i++)
+        for (var i = 0U; i < size; i += ActiveSkillDataLength)
         {
             // Flags
             WriteBytesToPointer(activeSkillDataPointer, binaryReader.ReadBytesAndReverse(4));
@@ -1739,12 +1764,12 @@ public class Mod : ModBase // <= Do not Remove.
         // Alignment
         binaryReader.ReadBytes(12);
 
-        if (version >= 2)
+        if (version >= 2 || !isExpandedTable)
         {
             // Size of technical combo maps segment
-            binaryReader.ReadUInt32();
+            size = binaryReader.ReadUInt32();
             
-            for (var i = 0; i < ExpandedTechnicalComboMapsCount; i++)
+            for (var i = 0U; i < size; i += TechnicalComboMapLength)
             {
                 // Applicable ailments
                 WriteBytesToPointer(technicalComboMapsPointer, binaryReader.ReadBytesAndReverse(4));
@@ -1804,8 +1829,10 @@ public class Mod : ModBase // <= Do not Remove.
         }
     }
     
-    private unsafe void LoadExpandedTables()
+    private async Task LoadExpandedTables()
     {
+        var watch = Stopwatch.StartNew();
+        
         var originalDataPath = $"{_modLoader.GetDirectoryForModId(_modConfig.ModId)}{Path.DirectorySeparatorChar}originaldata";
 
         if (!File.Exists(originalDataPath))
@@ -1816,447 +1843,540 @@ public class Mod : ModBase // <= Do not Remove.
         var pinnedOriginalSkillElements = new Pinnable<byte>(new byte[ExpandedSkillSlotCount * SkillElementLength]);
         var pinnedOriginalActiveSkillData = new Pinnable<byte>(new byte[ExpandedSkillSlotCount * ActiveSkillDataLength]);
         var pinnedOriginalTechnicalComboMaps = new Pinnable<byte>(new byte[ExpandedTechnicalComboMapsCount * TechnicalComboMapLength]);
+
+        unsafe
+        {
+            // Load the original data
+            LoadAndParseExpandedTableData(true, originalDataPath, pinnedOriginalSkillElements.Pointer, pinnedOriginalActiveSkillData.Pointer, pinnedOriginalTechnicalComboMaps.Pointer);
         
-        // Load the original data
-        LoadAndParseExpandedTableData(originalDataPath, pinnedOriginalSkillElements.Pointer, pinnedOriginalActiveSkillData.Pointer, pinnedOriginalTechnicalComboMaps.Pointer);
-        
-        // Copy the original data as it's the baseline
-        Buffer.MemoryCopy(pinnedOriginalSkillElements.Pointer, _pinnedSkillElements.Pointer,
-            ExpandedSkillSlotCount * SkillElementLength, ExpandedSkillSlotCount * SkillElementLength);
-        Buffer.MemoryCopy(pinnedOriginalActiveSkillData.Pointer, _pinnedActiveSkillData.Pointer,
-            ExpandedSkillSlotCount * ActiveSkillDataLength, ExpandedSkillSlotCount * ActiveSkillDataLength);
-        Buffer.MemoryCopy(pinnedOriginalTechnicalComboMaps.Pointer, _pinnedTechnicalComboMaps.Pointer,
-            ExpandedTechnicalComboMapsCount * TechnicalComboMapLength, ExpandedTechnicalComboMapsCount * TechnicalComboMapLength);
+            // Copy the original data as it's the baseline
+            Buffer.MemoryCopy(pinnedOriginalSkillElements.Pointer, _pinnedSkillElements.Pointer,
+                ExpandedSkillSlotCount * SkillElementLength, ExpandedSkillSlotCount * SkillElementLength);
+            Buffer.MemoryCopy(pinnedOriginalActiveSkillData.Pointer, _pinnedActiveSkillData.Pointer,
+                ExpandedSkillSlotCount * ActiveSkillDataLength, ExpandedSkillSlotCount * ActiveSkillDataLength);
+            Buffer.MemoryCopy(pinnedOriginalTechnicalComboMaps.Pointer, _pinnedTechnicalComboMaps.Pointer,
+                ExpandedTechnicalComboMapsCount * TechnicalComboMapLength, ExpandedTechnicalComboMapsCount * TechnicalComboMapLength);
+        }
         
         var pinnedTempSkillElements = new Pinnable<byte>(new byte[ExpandedSkillSlotCount * SkillElementLength]);
         var pinnedTempActiveSkillData = new Pinnable<byte>(new byte[ExpandedSkillSlotCount * ActiveSkillDataLength]);
         var pinnedTempTechnicalComboMaps = new Pinnable<byte>(new byte[ExpandedTechnicalComboMapsCount * TechnicalComboMapLength]);
         
         // TODO this here should also get data from memory of originally loaded skill table and merge that first
-
-        foreach (string expandedTablePath in _expandedTablePaths)
+        
+        // Check that all the SKILL.TBLs aren't open in something else. If not, delay.
+        var allReadable = true;
+        for (var i = 0; i < 10; i++)
         {
-            Log.Information($"Merging SKILL_EXPANDED.TBL at {expandedTablePath}");
+            allReadable = true;
             
-            // Load the expanded table data
-            var version = LoadAndParseExpandedTableData(expandedTablePath, pinnedTempSkillElements.Pointer, pinnedTempActiveSkillData.Pointer, pinnedTempTechnicalComboMaps.Pointer);
-
-            // Merge skill elements
-            var pOriginal = pinnedOriginalSkillElements.Pointer;
-            var pDestination = _pinnedSkillElements.Pointer;
-            var pSource = pinnedTempSkillElements.Pointer;
-            
-            for (var j = 0; j < ExpandedTableSkillSlotCount; j++)
+            foreach (var tablePath in _skillTableTuples)
             {
-                // Element
-                if (*pSource != *pOriginal)
+                if (!tablePath.Item1)
                 {
-                    *pDestination = *pSource;
+                    try
+                    {
+                        using var fStream = File.Open(tablePath.Item2, FileMode.Open, FileAccess.Read, FileShare.None);
+                    }
+                    catch (Exception)
+                    {
+                        allReadable = false;
+                        await Task.Delay(500);
+                    
+                        break;
+                    }
                 }
-                pOriginal += 1;
-                pDestination += 1;
-                pSource += 1;
-                
-                // Active or passive
-                if (*pSource != *pOriginal)
-                {
-                    *pDestination = *pSource;
-                }
-                pOriginal += 1;
-                pDestination += 1;
-                pSource += 1;
-                
-                // Inheritability
-                if (*pSource != *pOriginal)
-                {
-                    *pDestination = *pSource;
-                }
-                pOriginal += 1;
-                pDestination += 1;
-                pSource += 1;
-                
-                // Unused
-                if (*pSource != *pOriginal)
-                {
-                    *pDestination = *pSource;
-                }
-                pOriginal += 1;
-                pDestination += 1;
-                pSource += 1;
-                
-                // Unused
-                if (*(uint*)pSource != *(uint*)pOriginal)
-                {
-                    *(uint*)pDestination = *(uint*)pSource;
-                }
-                pOriginal += 4;
-                pDestination += 4;
-                pSource += 4;
-            }
-            
-            // Merge active skill data
-            pOriginal = pinnedOriginalActiveSkillData.Pointer;
-            pDestination = _pinnedActiveSkillData.Pointer;
-            pSource = pinnedTempActiveSkillData.Pointer;
-
-            for (var j = 0; j < ExpandedTableSkillSlotCount; j++)
-            {
-                // Flags
-                if (*(uint*)pSource != *(uint*)pOriginal)
-                {
-                    *(uint*)pDestination = *(uint*)pSource;
-                }
-                pOriginal += 4;
-                pDestination += 4;
-                pSource += 4;
-                
-                // Area type
-                if (*(ushort*)pSource != *(ushort*)pOriginal)
-                {
-                    *(ushort*)pDestination = *(ushort*)pSource;
-                }
-                pOriginal += 2;
-                pDestination += 2;
-                pSource += 2;
-                
-                // Damage stat
-                if (*pSource != *pOriginal)
-                {
-                    *pDestination = *pSource;
-                }
-                pOriginal += 1;
-                pDestination += 1;
-                pSource += 1;
-                
-                // Cost type
-                if (*pSource != *pOriginal)
-                {
-                    *pDestination = *pSource;
-                }
-                pOriginal += 1;
-                pDestination += 1;
-                pSource += 1;
-                
-                // Skill cost
-                if (*(ushort*)pSource != *(ushort*)pOriginal)
-                {
-                    *(ushort*)pDestination = *(ushort*)pSource;
-                }
-                pOriginal += 2;
-                pDestination += 2;
-                pSource += 2;
-                
-                // Physical or magic
-                if (*(ushort*)pSource != *(ushort*)pOriginal)
-                {
-                    *(ushort*)pDestination = *(ushort*)pSource;
-                }
-                pOriginal += 2;
-                pDestination += 2;
-                pSource += 2;
-                
-                // Number of targets
-                if (*pSource != *pOriginal)
-                {
-                    *pDestination = *pSource;
-                }
-                pOriginal += 1;
-                pDestination += 1;
-                pSource += 1;
-                
-                // Valid targets
-                if (*pSource != *pOriginal)
-                {
-                    *pDestination = *pSource;
-                }
-                pOriginal += 1;
-                pDestination += 1;
-                pSource += 1;
-                
-                // Additional target restrictions
-                if (*pSource != *pOriginal)
-                {
-                    *pDestination = *pSource;
-                }
-                pOriginal += 1;
-                pDestination += 1;
-                pSource += 1;
-                
-                // Unused
-                if (*pSource != *pOriginal)
-                {
-                    *pDestination = *pSource;
-                }
-                pOriginal += 1;
-                pDestination += 1;
-                pSource += 1;
-                
-                // Used but unknown
-                if (*(uint*)pSource != *(uint*)pOriginal)
-                {
-                    *(uint*)pDestination = *(uint*)pSource;
-                }
-                pOriginal += 4;
-                pDestination += 4;
-                pSource += 4;
-                
-                // Accuracy
-                if (*pSource != *pOriginal)
-                {
-                    *pDestination = *pSource;
-                }
-                pOriginal += 1;
-                pDestination += 1;
-                pSource += 1;
-                
-                // Minimum number of hits
-                if (*pSource != *pOriginal)
-                {
-                    *pDestination = *pSource;
-                }
-                pOriginal += 1;
-                pDestination += 1;
-                pSource += 1;
-                
-                // Maximum number of hits
-                if (*pSource != *pOriginal)
-                {
-                    *pDestination = *pSource;
-                }
-                pOriginal += 1;
-                pDestination += 1;
-                pSource += 1;
-                
-                // Damage/Healing type for HP
-                if (*pSource != *pOriginal)
-                {
-                    *pDestination = *pSource;
-                }
-                pOriginal += 1;
-                pDestination += 1;
-                pSource += 1;
-                
-                // Base damage to HP
-                if (*(ushort*)pSource != *(ushort*)pOriginal)
-                {
-                    *(ushort*)pDestination = *(ushort*)pSource;
-                }
-                pOriginal += 2;
-                pDestination += 2;
-                pSource += 2;
-                
-                // Damage/Healing type for SP
-                if (*pSource != *pOriginal)
-                {
-                    *pDestination = *pSource;
-                }
-                pOriginal += 1;
-                pDestination += 1;
-                pSource += 1;
-                
-                // Unused
-                if (*pSource != *pOriginal)
-                {
-                    *pDestination = *pSource;
-                }
-                pOriginal += 1;
-                pDestination += 1;
-                pSource += 1;
-                
-                // Base damage to SP
-                if (*(ushort*)pSource != *(ushort*)pOriginal)
-                {
-                    *(ushort*)pDestination = *(ushort*)pSource;
-                }
-                pOriginal += 2;
-                pDestination += 2;
-                pSource += 2;
-                
-                // Apply or cure effect
-                if (*pSource != *pOriginal)
-                {
-                    *pDestination = *pSource;
-                }
-                pOriginal += 1;
-                pDestination += 1;
-                pSource += 1;
-                
-                // Effect chance
-                if (*pSource != *pOriginal)
-                {
-                    *pDestination = *pSource;
-                }
-                pOriginal += 1;
-                pDestination += 1;
-                pSource += 1;
-                
-                // Effect list 1
-                if (*(uint*)pSource != *(uint*)pOriginal)
-                {
-                    *(uint*)pDestination = *(uint*)pSource;
-                }
-                pOriginal += 4;
-                pDestination += 4;
-                pSource += 4;
-                
-                // Effect list 2
-                if (*(uint*)pSource != *(uint*)pOriginal)
-                {
-                    *(uint*)pDestination = *(uint*)pSource;
-                }
-                pOriginal += 4;
-                pDestination += 4;
-                pSource += 4;
-                
-                // Other buffs
-                if (*(uint*)pSource != *(uint*)pOriginal)
-                {
-                    *(uint*)pDestination = *(uint*)pSource;
-                }
-                pOriginal += 4;
-                pDestination += 4;
-                pSource += 4;
-                
-                // Extra effects
-                if (*pSource != *pOriginal)
-                {
-                    *pDestination = *pSource;
-                }
-                pOriginal += 1;
-                pDestination += 1;
-                pSource += 1;
-                
-                // Crit chance
-                if (*pSource != *pOriginal)
-                {
-                    *pDestination = *pSource;
-                }
-                pOriginal += 1;
-                pDestination += 1;
-                pSource += 1;
-                
-                // Unused
-                if (*pSource != *pOriginal)
-                {
-                    *pDestination = *pSource;
-                }
-                pOriginal += 1;
-                pDestination += 1;
-                pSource += 1;
-                
-                // Unused
-                if (*pSource != *pOriginal)
-                {
-                    *pDestination = *pSource;
-                }
-                pOriginal += 1;
-                pDestination += 1;
-                pSource += 1;
             }
 
-            if (version < 2)
+            if (allReadable)
             {
-                continue;
-            }
-            
-            // Merge technical combo maps
-            pOriginal = pinnedOriginalTechnicalComboMaps.Pointer;
-            pDestination = _pinnedTechnicalComboMaps.Pointer;
-            pSource = pinnedTempTechnicalComboMaps.Pointer;
-            
-            for (var j = 0; j < ExpandedTechnicalComboMapsCount; j++)
-            {
-                // Applicable ailments
-                if (*(uint*)pSource != *(uint*)pOriginal)
-                {
-                    *(uint*)pDestination = *(uint*)pSource;
-                }
-                pOriginal += 4;
-                pDestination += 4;
-                pSource += 4;
-                
-                // All affinities are technical
-                if (*(uint*)pSource != *(uint*)pOriginal)
-                {
-                    *(uint*)pDestination = *(uint*)pSource;
-                }
-                pOriginal += 4;
-                pDestination += 4;
-                pSource += 4;
-                
-                // Technical affinity 1
-                if (*(uint*)pSource != *(uint*)pOriginal)
-                {
-                    *(uint*)pDestination = *(uint*)pSource;
-                }
-                pOriginal += 4;
-                pDestination += 4;
-                pSource += 4;
-                
-                // Technical affinity 2
-                if (*(uint*)pSource != *(uint*)pOriginal)
-                {
-                    *(uint*)pDestination = *(uint*)pSource;
-                }
-                pOriginal += 4;
-                pDestination += 4;
-                pSource += 4;
-                
-                // Technical affinity 3
-                if (*(uint*)pSource != *(uint*)pOriginal)
-                {
-                    *(uint*)pDestination = *(uint*)pSource;
-                }
-                pOriginal += 4;
-                pDestination += 4;
-                pSource += 4;
-                
-                // Technical affinity 4
-                if (*(uint*)pSource != *(uint*)pOriginal)
-                {
-                    *(uint*)pDestination = *(uint*)pSource;
-                }
-                pOriginal += 4;
-                pDestination += 4;
-                pSource += 4;
-                
-                // Technical affinity 5
-                if (*(uint*)pSource != *(uint*)pOriginal)
-                {
-                    *(uint*)pDestination = *(uint*)pSource;
-                }
-                pOriginal += 4;
-                pDestination += 4;
-                pSource += 4;
-                
-                // Damage multiplier
-                if (*(uint*)pSource != *(uint*)pOriginal)
-                {
-                    *(uint*)pDestination = *(uint*)pSource;
-                }
-                pOriginal += 4;
-                pDestination += 4;
-                pSource += 4;
-                
-                // Unused
-                if (*(uint*)pSource != *(uint*)pOriginal)
-                {
-                    *(uint*)pDestination = *(uint*)pSource;
-                }
-                pOriginal += 4;
-                pDestination += 4;
-                pSource += 4;
-                
-                // Requires Knowing the Heart
-                if (*(uint*)pSource != *(uint*)pOriginal)
-                {
-                    *(uint*)pDestination = *(uint*)pSource;
-                }
-                pOriginal += 4;
-                pDestination += 4;
-                pSource += 4;
+                break;
             }
         }
+
+        if (!allReadable)
+        {
+            Log.Error("Cannot read one of the SKILL.TBls");
+            
+            return;
+        }
+
+        unsafe
+        {
+            foreach (var tuple in _skillTableTuples)
+            {
+                Log.Information($"Merging {(tuple.Item1 ? "SKILL_EXPANDED.TBL" : "SKILL.TBL")} at {tuple.Item2}");
+
+                // Load the expanded table data
+                var version = LoadAndParseExpandedTableData(tuple.Item1, tuple.Item2, pinnedTempSkillElements.Pointer, pinnedTempActiveSkillData.Pointer,
+                    pinnedTempTechnicalComboMaps.Pointer);
+
+                // Merge skill elements
+                var pOriginal = pinnedOriginalSkillElements.Pointer;
+                var pDestination = _pinnedSkillElements.Pointer;
+                var pSource = pinnedTempSkillElements.Pointer;
+
+                var count = tuple.Item1 ? ExpandedTableSkillSlotCount : VanillaSkillElementsCount;
+                for (var j = 0; j < count; j++)
+                {
+                    // Element
+                    if (*pSource != *pOriginal)
+                    {
+                        *pDestination = *pSource;
+                    }
+
+                    pOriginal += 1;
+                    pDestination += 1;
+                    pSource += 1;
+
+                    // Active or passive
+                    if (*pSource != *pOriginal)
+                    {
+                        *pDestination = *pSource;
+                    }
+
+                    pOriginal += 1;
+                    pDestination += 1;
+                    pSource += 1;
+
+                    // Inheritability
+                    if (*pSource != *pOriginal)
+                    {
+                        *pDestination = *pSource;
+                    }
+
+                    pOriginal += 1;
+                    pDestination += 1;
+                    pSource += 1;
+
+                    // Unused
+                    if (*pSource != *pOriginal)
+                    {
+                        *pDestination = *pSource;
+                    }
+
+                    pOriginal += 1;
+                    pDestination += 1;
+                    pSource += 1;
+
+                    // Unused
+                    if (*(uint*)pSource != *(uint*)pOriginal)
+                    {
+                        *(uint*)pDestination = *(uint*)pSource;
+                    }
+
+                    pOriginal += 4;
+                    pDestination += 4;
+                    pSource += 4;
+                }
+
+                // Merge active skill data
+                pOriginal = pinnedOriginalActiveSkillData.Pointer;
+                pDestination = _pinnedActiveSkillData.Pointer;
+                pSource = pinnedTempActiveSkillData.Pointer;
+
+                count = tuple.Item1 ? ExpandedTableSkillSlotCount : VanillaActiveSkillDataCount;
+                for (var j = 0; j < count; j++)
+                {
+                    // Flags
+                    if (*(uint*)pSource != *(uint*)pOriginal)
+                    {
+                        *(uint*)pDestination = *(uint*)pSource;
+                    }
+
+                    pOriginal += 4;
+                    pDestination += 4;
+                    pSource += 4;
+
+                    // Area type
+                    if (*(ushort*)pSource != *(ushort*)pOriginal)
+                    {
+                        *(ushort*)pDestination = *(ushort*)pSource;
+                    }
+
+                    pOriginal += 2;
+                    pDestination += 2;
+                    pSource += 2;
+
+                    // Damage stat
+                    if (*pSource != *pOriginal)
+                    {
+                        *pDestination = *pSource;
+                    }
+
+                    pOriginal += 1;
+                    pDestination += 1;
+                    pSource += 1;
+
+                    // Cost type
+                    if (*pSource != *pOriginal)
+                    {
+                        *pDestination = *pSource;
+                    }
+
+                    pOriginal += 1;
+                    pDestination += 1;
+                    pSource += 1;
+
+                    // Skill cost
+                    if (*(ushort*)pSource != *(ushort*)pOriginal)
+                    {
+                        *(ushort*)pDestination = *(ushort*)pSource;
+                    }
+
+                    pOriginal += 2;
+                    pDestination += 2;
+                    pSource += 2;
+
+                    // Physical or magic
+                    if (*(ushort*)pSource != *(ushort*)pOriginal)
+                    {
+                        *(ushort*)pDestination = *(ushort*)pSource;
+                    }
+
+                    pOriginal += 2;
+                    pDestination += 2;
+                    pSource += 2;
+
+                    // Number of targets
+                    if (*pSource != *pOriginal)
+                    {
+                        *pDestination = *pSource;
+                    }
+
+                    pOriginal += 1;
+                    pDestination += 1;
+                    pSource += 1;
+
+                    // Valid targets
+                    if (*pSource != *pOriginal)
+                    {
+                        *pDestination = *pSource;
+                    }
+
+                    pOriginal += 1;
+                    pDestination += 1;
+                    pSource += 1;
+
+                    // Additional target restrictions
+                    if (*pSource != *pOriginal)
+                    {
+                        *pDestination = *pSource;
+                    }
+
+                    pOriginal += 1;
+                    pDestination += 1;
+                    pSource += 1;
+
+                    // Unused
+                    if (*pSource != *pOriginal)
+                    {
+                        *pDestination = *pSource;
+                    }
+
+                    pOriginal += 1;
+                    pDestination += 1;
+                    pSource += 1;
+
+                    // Used but unknown
+                    if (*(uint*)pSource != *(uint*)pOriginal)
+                    {
+                        *(uint*)pDestination = *(uint*)pSource;
+                    }
+
+                    pOriginal += 4;
+                    pDestination += 4;
+                    pSource += 4;
+
+                    // Accuracy
+                    if (*pSource != *pOriginal)
+                    {
+                        *pDestination = *pSource;
+                    }
+
+                    pOriginal += 1;
+                    pDestination += 1;
+                    pSource += 1;
+
+                    // Minimum number of hits
+                    if (*pSource != *pOriginal)
+                    {
+                        *pDestination = *pSource;
+                    }
+
+                    pOriginal += 1;
+                    pDestination += 1;
+                    pSource += 1;
+
+                    // Maximum number of hits
+                    if (*pSource != *pOriginal)
+                    {
+                        *pDestination = *pSource;
+                    }
+
+                    pOriginal += 1;
+                    pDestination += 1;
+                    pSource += 1;
+
+                    // Damage/Healing type for HP
+                    if (*pSource != *pOriginal)
+                    {
+                        *pDestination = *pSource;
+                    }
+
+                    pOriginal += 1;
+                    pDestination += 1;
+                    pSource += 1;
+
+                    // Base damage to HP
+                    if (*(ushort*)pSource != *(ushort*)pOriginal)
+                    {
+                        *(ushort*)pDestination = *(ushort*)pSource;
+                    }
+
+                    pOriginal += 2;
+                    pDestination += 2;
+                    pSource += 2;
+
+                    // Damage/Healing type for SP
+                    if (*pSource != *pOriginal)
+                    {
+                        *pDestination = *pSource;
+                    }
+
+                    pOriginal += 1;
+                    pDestination += 1;
+                    pSource += 1;
+
+                    // Unused
+                    if (*pSource != *pOriginal)
+                    {
+                        *pDestination = *pSource;
+                    }
+
+                    pOriginal += 1;
+                    pDestination += 1;
+                    pSource += 1;
+
+                    // Base damage to SP
+                    if (*(ushort*)pSource != *(ushort*)pOriginal)
+                    {
+                        *(ushort*)pDestination = *(ushort*)pSource;
+                    }
+
+                    pOriginal += 2;
+                    pDestination += 2;
+                    pSource += 2;
+
+                    // Apply or cure effect
+                    if (*pSource != *pOriginal)
+                    {
+                        *pDestination = *pSource;
+                    }
+
+                    pOriginal += 1;
+                    pDestination += 1;
+                    pSource += 1;
+
+                    // Effect chance
+                    if (*pSource != *pOriginal)
+                    {
+                        *pDestination = *pSource;
+                    }
+
+                    pOriginal += 1;
+                    pDestination += 1;
+                    pSource += 1;
+
+                    // Effect list 1
+                    if (*(uint*)pSource != *(uint*)pOriginal)
+                    {
+                        *(uint*)pDestination = *(uint*)pSource;
+                    }
+
+                    pOriginal += 4;
+                    pDestination += 4;
+                    pSource += 4;
+
+                    // Effect list 2
+                    if (*(uint*)pSource != *(uint*)pOriginal)
+                    {
+                        *(uint*)pDestination = *(uint*)pSource;
+                    }
+
+                    pOriginal += 4;
+                    pDestination += 4;
+                    pSource += 4;
+
+                    // Other buffs
+                    if (*(uint*)pSource != *(uint*)pOriginal)
+                    {
+                        *(uint*)pDestination = *(uint*)pSource;
+                    }
+
+                    pOriginal += 4;
+                    pDestination += 4;
+                    pSource += 4;
+
+                    // Extra effects
+                    if (*pSource != *pOriginal)
+                    {
+                        *pDestination = *pSource;
+                    }
+
+                    pOriginal += 1;
+                    pDestination += 1;
+                    pSource += 1;
+
+                    // Crit chance
+                    if (*pSource != *pOriginal)
+                    {
+                        *pDestination = *pSource;
+                    }
+
+                    pOriginal += 1;
+                    pDestination += 1;
+                    pSource += 1;
+
+                    // Unused
+                    if (*pSource != *pOriginal)
+                    {
+                        *pDestination = *pSource;
+                    }
+
+                    pOriginal += 1;
+                    pDestination += 1;
+                    pSource += 1;
+
+                    // Unused
+                    if (*pSource != *pOriginal)
+                    {
+                        *pDestination = *pSource;
+                    }
+
+                    pOriginal += 1;
+                    pDestination += 1;
+                    pSource += 1;
+                }
+
+                if (version < 2 && tuple.Item1)
+                {
+                    continue;
+                }
+
+                // Merge technical combo maps
+                pOriginal = pinnedOriginalTechnicalComboMaps.Pointer;
+                pDestination = _pinnedTechnicalComboMaps.Pointer;
+                pSource = pinnedTempTechnicalComboMaps.Pointer;
+
+                count = tuple.Item1 ? ExpandedTechnicalComboMapsCount : VanillaTechnicalComboMapsCount;
+                for (var j = 0; j < count; j++)
+                {
+                    // Applicable ailments
+                    if (*(uint*)pSource != *(uint*)pOriginal)
+                    {
+                        *(uint*)pDestination = *(uint*)pSource;
+                    }
+
+                    pOriginal += 4;
+                    pDestination += 4;
+                    pSource += 4;
+
+                    // All affinities are technical
+                    if (*(uint*)pSource != *(uint*)pOriginal)
+                    {
+                        *(uint*)pDestination = *(uint*)pSource;
+                    }
+
+                    pOriginal += 4;
+                    pDestination += 4;
+                    pSource += 4;
+
+                    // Technical affinity 1
+                    if (*(uint*)pSource != *(uint*)pOriginal)
+                    {
+                        *(uint*)pDestination = *(uint*)pSource;
+                    }
+
+                    pOriginal += 4;
+                    pDestination += 4;
+                    pSource += 4;
+
+                    // Technical affinity 2
+                    if (*(uint*)pSource != *(uint*)pOriginal)
+                    {
+                        *(uint*)pDestination = *(uint*)pSource;
+                    }
+
+                    pOriginal += 4;
+                    pDestination += 4;
+                    pSource += 4;
+
+                    // Technical affinity 3
+                    if (*(uint*)pSource != *(uint*)pOriginal)
+                    {
+                        *(uint*)pDestination = *(uint*)pSource;
+                    }
+
+                    pOriginal += 4;
+                    pDestination += 4;
+                    pSource += 4;
+
+                    // Technical affinity 4
+                    if (*(uint*)pSource != *(uint*)pOriginal)
+                    {
+                        *(uint*)pDestination = *(uint*)pSource;
+                    }
+
+                    pOriginal += 4;
+                    pDestination += 4;
+                    pSource += 4;
+
+                    // Technical affinity 5
+                    if (*(uint*)pSource != *(uint*)pOriginal)
+                    {
+                        *(uint*)pDestination = *(uint*)pSource;
+                    }
+
+                    pOriginal += 4;
+                    pDestination += 4;
+                    pSource += 4;
+
+                    // Damage multiplier
+                    if (*(uint*)pSource != *(uint*)pOriginal)
+                    {
+                        *(uint*)pDestination = *(uint*)pSource;
+                    }
+
+                    pOriginal += 4;
+                    pDestination += 4;
+                    pSource += 4;
+
+                    // Unused
+                    if (*(uint*)pSource != *(uint*)pOriginal)
+                    {
+                        *(uint*)pDestination = *(uint*)pSource;
+                    }
+
+                    pOriginal += 4;
+                    pDestination += 4;
+                    pSource += 4;
+
+                    // Requires Knowing the Heart
+                    if (*(uint*)pSource != *(uint*)pOriginal)
+                    {
+                        *(uint*)pDestination = *(uint*)pSource;
+                    }
+
+                    pOriginal += 4;
+                    pDestination += 4;
+                    pSource += 4;
+                }
+            }
+        }
+        
+        watch.Stop();
+        Log.Information($"Merging completed in {watch.ElapsedMilliseconds}ms");
     }
     
     private unsafe long FUN_140e39b70_Custom(long param1)
@@ -2269,44 +2389,22 @@ public class Mod : ModBase // <= Do not Remove.
         {
             if (plVar5[1] != 0)
             {
-                if (_expandedTablePaths.Count == 0)
+                if (!_skillTableTuples.Any(x => x.Item1))
                 {
                     Log.Information("No expanded skill tables found.");
 
                     return result;
                 }
                 
-                LoadExpandedTables();
-                
                 _skillElementsOffset = (long)_pinnedSkillElements.Pointer - _DAT_142260b80_Address;
                 _activeSkillDataOffset = (long)_pinnedActiveSkillData.Pointer - _DAT_142226bf0_Address;
                 _technicalComboMapsOffset = (long)_pinnedTechnicalComboMaps.Pointer - _DAT_1422301f0_Address;
-                
-                /*
-                Buffer.MemoryCopy((byte*)_DAT_142260b80_Address, _pinnedSkillElements.Pointer,
-                    VanillaSkillElementsLength * SkillElementLength, VanillaSkillElementsLength * SkillElementLength);
-                _skillElementsOffset = (long)_pinnedSkillElements.Pointer - _DAT_142260b80_Address;
-                
-                Buffer.MemoryCopy((byte*)_DAT_142226bf0_Address, _pinnedActiveSkillData.Pointer,
-                    VanillaActiveSkillDataLength * ActiveSkillDataLength, VanillaActiveSkillDataLength * ActiveSkillDataLength);
-                _activeSkillDataOffset = (long)_pinnedActiveSkillData.Pointer - _DAT_142226bf0_Address;
-                
-                Buffer.MemoryCopy((byte*)_DAT_1422301f0_Address, _pinnedTechnicalComboMaps.Pointer,
-                    VanillaTechnicalComboMapsCount * TechnicalComboMapLength, VanillaTechnicalComboMapsCount * TechnicalComboMapLength);
-
-                Log.Information("We do a little tomfoolery. Replacing bytes for skill id 1800 with bytes of 22 (Bufudyne)");
-                Buffer.MemoryCopy(_pinnedSkillElements.Pointer + 22 * SkillElementLength, _pinnedSkillElements.Pointer + 1800 * SkillElementLength,
-                    SkillElementLength, SkillElementLength);
-                Buffer.MemoryCopy(_pinnedActiveSkillData.Pointer + 22 * ActiveSkillDataLength, _pinnedActiveSkillData.Pointer + 1800 * ActiveSkillDataLength,
-                    ActiveSkillDataLength, ActiveSkillDataLength);
-                
-                Log.Information($"2 test info. Element: {_pinnedSkillElements.Pointer[2 * SkillElementLength]}, activatibility: {_pinnedSkillElements.Pointer[2 * SkillElementLength + 1]}, area type: {_pinnedActiveSkillData.Pointer[2 * ActiveSkillDataLength + 4]}");
-                Log.Information($"1800 test info. Element: {_pinnedSkillElements.Pointer[1800 * SkillElementLength]}, activatibility: {_pinnedSkillElements.Pointer[1800 * SkillElementLength + 1]}, area type: {_pinnedActiveSkillData.Pointer[1800 * ActiveSkillDataLength + 4]}");
-                */
 
                 _memory = new(Process.GetCurrentProcess());
                 
                 AboardExclamationPoint();
+                
+                Task.Run(LoadExpandedTables);
             }
         }
 
