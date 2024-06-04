@@ -82,10 +82,14 @@ public static class Log
 
     private static string FormatMessage(LogLevel level, string message)
     {
+        if (level == LogLevel.Information)
+        {
+            return $"[{name}] {message}";
+        }
+        
         var levelStr =
             level == LogLevel.Verbose ? "[VRB]" :
             level == LogLevel.Debug ? "[DBG]" :
-            level == LogLevel.Information ? "[INF]" :
             level == LogLevel.Warning ? "[WRN]" :
             level == LogLevel.Error ? "[ERR]" : string.Empty;
 

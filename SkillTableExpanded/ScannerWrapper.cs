@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Project.Utils;
 using Reloaded.Hooks.Definitions;
 using Reloaded.Memory.Sigscan;
@@ -35,7 +36,7 @@ public class ScannerWrapper
 
                 var baseAddress = BaseAddress + result.Offset;
             
-                Log.Information($"{name} found at: {baseAddress:X}");
+                LogInfo($"{name} found at: {baseAddress:X}");
             
                 var offsetAddress = baseAddress + instructionOffset;
                 var offsetAddressPointer = (int*)offsetAddress;
@@ -59,7 +60,7 @@ public class ScannerWrapper
 
             var address = BaseAddress + result.Offset;
             
-            Log.Information($"{name} found at: {address:X}");
+            LogInfo($"{name} found at: {address:X}");
             
             callback(_hooks.CreateHook(function, address).Activate());
         });
@@ -80,7 +81,7 @@ public class ScannerWrapper
 
                 var baseAddress = BaseAddress + result.Offset;
             
-                Log.Information($"{name} found at: {baseAddress:X}");
+                LogInfo($"{name} found at: {baseAddress:X}");
             
                 var offsetAddress = baseAddress + instructionOffset;
                 var offsetAddressPointer = (int*)offsetAddress;
@@ -104,7 +105,7 @@ public class ScannerWrapper
 
             var address = BaseAddress + result.Offset;
             
-            Log.Information($"{name} found at: {address:X}");
+            LogInfo($"{name} found at: {address:X}");
 
             callback(_hooks.CreateWrapper<T>(address, out _));
         });
@@ -125,7 +126,7 @@ public class ScannerWrapper
 
                 var baseAddress = BaseAddress + result.Offset;
             
-                Log.Information($"{name} found at: {baseAddress:X}");
+                LogInfo($"{name} found at: {baseAddress:X}");
             
                 var offsetAddress = baseAddress + instructionOffset;
                 var offsetAddressPointer = (int*)offsetAddress;
@@ -149,7 +150,7 @@ public class ScannerWrapper
 
             var address = BaseAddress + result.Offset;
             
-            Log.Information($"{name} found at: {address:X}");
+            LogInfo($"{name} found at: {address:X}");
             
             callback(address);
         });
@@ -181,7 +182,7 @@ public class ScannerWrapper
             var address = BaseAddress + result.Offset;
             addresses[0] = address;
             
-            Log.Information($"{name} (1) found at: {address:X}");
+            LogInfo($"{name} (1) found at: {address:X}");
             
             using var thisProcess = Process.GetCurrentProcess();
             using var scanner = new Scanner(thisProcess, thisProcess.MainModule);
@@ -193,10 +194,18 @@ public class ScannerWrapper
                 address = BaseAddress + result.Offset;
                 addresses[i] = address;
                 
-                Log.Information($"{name} ({i + 1}) found at: {address:X}");
+                LogInfo($"{name} ({i + 1}) found at: {address:X}");
             }
 
             callback(addresses);
         });
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void LogInfo(string info)
+    {
+#if DEBUG
+        Log.Information(info);
+#endif
     }
 }
