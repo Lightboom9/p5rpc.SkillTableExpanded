@@ -91,10 +91,10 @@ public class Mod : ModBase // <= Do not Remove.
         Log.Initialize("p5rpc.SkillTableExpanded", _logger, Color.Aquamarine);
         
         _modLoader.OnModLoaderInitialized += OnModLoaderInitialised;
-
+        
         _modLoader.GetController<IStartupScanner>().TryGetTarget(out var scanner);
         _scanner = new ScannerWrapper(scanner!, _hooks!);
-
+        
         _hooker = new Hooker(_scanner, _hooks!);
         
         unsafe
@@ -425,8 +425,6 @@ public class Mod : ModBase // <= Do not Remove.
         var pinnedTempSkillElements = new Pinnable<byte>(new byte[ExpandedSkillSlotCount * SkillElementLength]);
         var pinnedTempActiveSkillData = new Pinnable<byte>(new byte[ExpandedSkillSlotCount * ActiveSkillDataLength]);
         var pinnedTempTechnicalComboMaps = new Pinnable<byte>(new byte[ExpandedTechnicalComboMapsCount * TechnicalComboMapLength]);
-        
-        // TODO this here should also get data from memory of originally loaded skill table and merge that first
         
         // Check that all the SKILL.TBLs aren't open in something else. If not, delay.
         var allReadable = true;

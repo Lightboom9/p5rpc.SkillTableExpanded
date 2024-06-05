@@ -19,15 +19,9 @@ public class BigEndianBinaryReader : IDisposable
     
     private byte[] Reverse(byte[] arr)
     {
-        var reversedArr = new byte[arr.Length];
-        var lastIndex = arr.Length - 1;
+        Array.Reverse(arr);
 
-        for (var i = 0; i <= lastIndex; i++)
-        {
-            reversedArr[i] = arr[lastIndex - i];
-        }
-
-        return reversedArr;
+        return arr;
     }
 
     public void Dispose()

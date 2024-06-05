@@ -18,13 +18,15 @@ public static class Log
         Log.alwaysAsync = alwaysAsync;
     }
 
-    public static LogLevel LogLevel { get; set; } = LogLevel.Information;
-
-    public static void Verbose(string message, bool useAsync = false)
+    private static LogLevel LogLevel
     {
-        if (LogLevel < LogLevel.Debug)
+        get
         {
-            LogMessage(LogLevel.Verbose, message, useAsync);
+#if DEBUG
+            return LogLevel.Debug;
+#else
+            return LogLevel.Information;
+#endif
         }
     }
 
@@ -51,6 +53,7 @@ public static class Log
             LogMessage(LogLevel.Warning, message, useAsync);
         }
     }
+    
     public static void Error(Exception ex, string message, bool useAsync = false)
     {
         LogMessage(LogLevel.Error, $"{message}\n{ex.Message}\n{ex.StackTrace}", useAsync);
