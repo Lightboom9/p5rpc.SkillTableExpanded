@@ -485,7 +485,7 @@ public class Hooker
     private nint _MOVZX_140e331b8_Address;
     
     #endregion
-
+    
 
     private readonly ScannerWrapper _scanner;
     private readonly IReloadedHooks _hooks;
@@ -501,7 +501,10 @@ public class Hooker
     private long _customInstructionSetOffset;
     
     private ExternalMemory _memory;
-    
+
+    public nint VanillaSkillElementsAddress => _DAT_142260b80_Address;
+    public nint VanillaActiveSkillDataAddress => _DAT_142226bf0_Address;
+    public nint VanillaTechnicalComboMapsAddress => _DAT_1422301f0_Address;
 
     public Hooker(ScannerWrapper scanner, IReloadedHooks hooks)
     {

@@ -453,15 +453,18 @@ public class Mod : ModBase // <= Do not Remove.
 
         if (!allReadable)
         {
-            Log.Error("Cannot read one of the SKILL.TBls");
-            
-            return;
+            Log.Error("Cannot read one of the SKILL.TBls, they will not be merged.");
         }
 
         unsafe
         {
             foreach (var tuple in _skillTableTuples)
             {
+                if (!tuple.Item1 && !allReadable)
+                {
+                    continue;
+                }
+                
                 Log.Information($"Merging {(tuple.Item1 ? "SKILL_EXPANDED.TBL" : "SKILL.TBL")} at {tuple.Item2}");
 
                 // Load the expanded table data
@@ -761,19 +764,18 @@ public class Mod : ModBase // <= Do not Remove.
                         *(uint*)pDestination = *(uint*)pSource;
                     }
 
-                    pOriginal += 4;
-                    pDestination += 4;
-                    pSource += 4;
-
-                    // Other buffs
-                    if (*(uint*)pSource != *(uint*)pOriginal)
+                    // Other buffs. Merged by byte despite being a uint
+                    for (var k = 0; k < 4; k++)
                     {
-                        *(uint*)pDestination = *(uint*)pSource;
-                    }
+                        if (*pSource != *pOriginal)
+                        {
+                            *pDestination = *pSource;
+                        }
 
-                    pOriginal += 4;
-                    pDestination += 4;
-                    pSource += 4;
+                        pOriginal += 1;
+                        pDestination += 1;
+                        pSource += 1;
+                    }
 
                     // Extra effects
                     if (*pSource != *pOriginal)
@@ -930,6 +932,14 @@ public class Mod : ModBase // <= Do not Remove.
                     pSource += 4;
                 }
             }
+            
+            // Fill the vanilla skill tbl data in game's memory with merged values, just in case
+            Buffer.MemoryCopy(_pinnedSkillElements.Pointer, (byte*)_hooker.VanillaSkillElementsAddress,
+                VanillaSkillElementsCount * SkillElementLength, VanillaSkillElementsCount * SkillElementLength);
+            Buffer.MemoryCopy(_pinnedActiveSkillData.Pointer, (byte*)_hooker.VanillaActiveSkillDataAddress,
+                VanillaActiveSkillDataCount * ActiveSkillDataLength, VanillaActiveSkillDataCount * ActiveSkillDataLength);
+            Buffer.MemoryCopy(_pinnedTechnicalComboMaps.Pointer, (byte*)_hooker.VanillaTechnicalComboMapsAddress,
+                VanillaTechnicalComboMapsCount * TechnicalComboMapLength, VanillaTechnicalComboMapsCount * TechnicalComboMapLength);
         }
         
         watch.Stop();
