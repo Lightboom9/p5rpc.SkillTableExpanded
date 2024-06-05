@@ -101,6 +101,13 @@ public class Mod : ModBase // <= Do not Remove.
         {
             _scanner.GetFunctionHook<LoadSkillTbl>("LoadSkillTbl", "48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC 20 8B 19",
                 LoadSkillTbl_Custom, hook => _LoadSkillTbl_Hook = hook);
+            
+            _modConfig.PluginData["ExpandedTableAddresses"] = new[]
+            {
+                (ulong)_pinnedSkillElements.Pointer,
+                (ulong)_pinnedActiveSkillData.Pointer,
+                (ulong)_pinnedTechnicalComboMaps.Pointer
+            };
         }
     }
     
