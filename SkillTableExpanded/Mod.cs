@@ -88,7 +88,7 @@ public class Mod : ModBase // <= Do not Remove.
         _configuration = context.Configuration;
         _modConfig = context.ModConfig;
         
-        Log.Initialize("p5rpc.SkillTableExpanded", _logger, Color.Aquamarine);
+        Log.Initialize("p5rpc.SkillTableExpanded", _logger, Color.Aquamarine, _configuration.LogLevel);
         
         _modLoader.OnModLoaderInitialized += OnModLoaderInitialised;
         

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
+using Project.Utils;
 using SkillTableExpanded.Template.Configuration;
-using Reloaded.Mod.Interfaces.Structs;
 
 namespace SkillTableExpanded.Configuration;
 
@@ -25,6 +25,11 @@ public class Config : Configurable<Config>
 
         The `DefaultValue` attribute is used as part of the `Reset` button in Reloaded-Launcher.
     */
+    
+    [DisplayName("Enum")]
+    [Description("This is an enumerable.")]
+    [DefaultValue(LogLevel.Information)]
+    public LogLevel LogLevel { get; set; } = LogLevel.Information;
 
     /*
     [DisplayName("String")]

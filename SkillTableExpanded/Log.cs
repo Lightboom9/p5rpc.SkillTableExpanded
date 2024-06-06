@@ -5,34 +5,24 @@ namespace Project.Utils;
 
 public static class Log
 {
-    private static string name = "Mod";
-    private static ILogger? log;
-    private static Color color = Color.White;
-    private static bool alwaysAsync;
+    private static string _modName = "Mod";
+    private static ILogger? _logger;
+    private static Color _informationColor = Color.White;
+    private static LogLevel _logLevel;
+    private static bool _alwaysAsync;
 
-    public static void Initialize(string name, ILogger log, Color color, bool alwaysAsync = false)
+    public static void Initialize(string modName, ILogger logger, Color informationColor, LogLevel logLevel, bool alwaysAsync = false)
     {
-        Log.name = name;
-        Log.log = log;
-        Log.color = color;
-        Log.alwaysAsync = alwaysAsync;
-    }
-
-    private static LogLevel LogLevel
-    {
-        get
-        {
-#if DEBUG
-            return LogLevel.Debug;
-#else
-            return LogLevel.Information;
-#endif
-        }
+        _modName = modName;
+        _logger = logger;
+        _informationColor = informationColor;
+        _logLevel = logLevel;
+        _alwaysAsync = alwaysAsync;
     }
 
     public static void Debug(string message, bool useAsync = false)
     {
-        if (LogLevel < LogLevel.Information)
+        if (_logLevel < LogLevel.Information)
         {
             LogMessage(LogLevel.Debug, message, useAsync);
         }
@@ -40,7 +30,7 @@ public static class Log
 
     public static void Information(string message, bool useAsync = false)
     {
-        if (LogLevel < LogLevel.Warning)
+        if (_logLevel < LogLevel.Warning)
         {
             LogMessage(LogLevel.Information, message, useAsync);
         }
@@ -48,7 +38,7 @@ public static class Log
 
     public static void Warning(string message, bool useAsync = false)
     {
-        if (LogLevel < LogLevel.Error)
+        if (_logLevel < LogLevel.Error)
         {
             LogMessage(LogLevel.Warning, message, useAsync);
         }
@@ -68,18 +58,18 @@ public static class Log
     {
         var color =
             level == LogLevel.Debug ? Color.LightGreen :
-            level == LogLevel.Information ? Log.color :
+            level == LogLevel.Information ? _informationColor :
             level == LogLevel.Error ? Color.Red :
             level == LogLevel.Warning ? Color.LightGoldenrodYellow :
             Color.White;
 
-        if (useAsync || alwaysAsync)
+        if (useAsync || _alwaysAsync)
         {
-            log?.WriteLineAsync(FormatMessage(level, message), color);
+            _logger?.WriteLineAsync(FormatMessage(level, message), color);
         }
         else
         {
-            log?.WriteLine(FormatMessage(level, message), color);
+            _logger?.WriteLine(FormatMessage(level, message), color);
         }
     }
 
@@ -87,22 +77,20 @@ public static class Log
     {
         if (level == LogLevel.Information)
         {
-            return $"[{name}] {message}";
+            return $"[{_modName}] {message}";
         }
         
         var levelStr =
-            level == LogLevel.Verbose ? "[VRB]" :
             level == LogLevel.Debug ? "[DBG]" :
             level == LogLevel.Warning ? "[WRN]" :
             level == LogLevel.Error ? "[ERR]" : string.Empty;
 
-        return $"[{name}] {levelStr} {message}";
+        return $"[{_modName}] {levelStr} {message}";
     }
 }
 
 public enum LogLevel
 {
-    Verbose,
     Debug,
     Information,
     Warning,
