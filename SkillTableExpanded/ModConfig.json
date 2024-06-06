@@ -3,7 +3,7 @@
   "ModName": "Skill Table Expanded",
   "ModAuthor": "Lightboom",
   "ModVersion": "1.0.0",
-  "ModDescription": "Descriptive description",
+  "ModDescription": "A mod that expands the SKILL.TBL, allowing for more custom skills and technicals",
   "ModDll": "SkillTableExpanded.dll",
   "ModIcon": "Preview.png",
   "ModR2RManagedDll32": "x86/SkillTableExpanded.dll",
@@ -13,7 +13,7 @@
   "Tags": [],
   "CanUnload": false,
   "HasExports": false,
-  "IsLibrary": false,
+  "IsLibrary": true,
   "ReleaseMetadataFileName": "p5rpc.SkillTableExpanded.ReleaseMetadata.json",
   "PluginData": {
     "GitHubDependencies": {
@@ -27,6 +27,15 @@
           },
           "ReleaseMetadataName": "p5rpc.modloader.ReleaseMetadata.json"
         },
+        "Reloaded.Memory.SigScan.ReloadedII": {
+          "Config": {
+            "UserName": "Reloaded-Project",
+            "RepositoryName": "Reloaded.Memory.SigScan",
+            "UseReleaseTag": false,
+            "AssetFileName": "Mod.zip"
+          },
+          "ReleaseMetadataName": "Reloaded.Memory.SigScan.ReloadedII.ReleaseMetadata.json"
+        },
         "reloaded.sharedlib.hooks": {
           "Config": {
             "UserName": "Sewer56",
@@ -36,14 +45,23 @@
           },
           "ReleaseMetadataName": "Sewer56.Update.ReleaseMetadata.json"
         },
-        "Reloaded.Memory.SigScan.ReloadedII": {
+        "reloaded.universal.fileemulationframework": {
           "Config": {
-            "UserName": "Reloaded-Project",
-            "RepositoryName": "Reloaded.Memory.SigScan",
+            "UserName": "Sewer56",
+            "RepositoryName": "FileEmulationFramework",
             "UseReleaseTag": false,
             "AssetFileName": "Mod.zip"
           },
-          "ReleaseMetadataName": "Reloaded.Memory.SigScan.ReloadedII.ReleaseMetadata.json"
+          "ReleaseMetadataName": "Reloaded.Universal.FileEmulationFramework.ReleaseMetadata.json"
+        },
+        "reloaded.universal.fileemulationframework.bmd": {
+          "Config": {
+            "UserName": "Sewer56",
+            "RepositoryName": "FileEmulationFramework",
+            "UseReleaseTag": false,
+            "AssetFileName": "Mod.zip"
+          },
+          "ReleaseMetadataName": "BMD.File.Emulator.ReleaseMetadata.json"
         },
         "CriFs.V2.Hook.Awb": {
           "Config": {
@@ -98,28 +116,25 @@
             "AssetFileName": "Mod.zip"
           },
           "ReleaseMetadataName": "AWB.Stream.Emulator.ReleaseMetadata.json"
-        },
-        "reloaded.universal.fileemulationframework": {
-          "Config": {
-            "UserName": "Sewer56",
-            "RepositoryName": "FileEmulationFramework",
-            "UseReleaseTag": false,
-            "AssetFileName": "Mod.zip"
-          },
-          "ReleaseMetadataName": "Reloaded.Universal.FileEmulationFramework.ReleaseMetadata.json"
         }
       }
+    },
+    "GameBanana": {
+      "ItemType": "Mod",
+      "ItemId": 518527
     }
   },
   "IsUniversalMod": false,
   "ModDependencies": [
     "p5rpc.modloader",
+    "Reloaded.Memory.SigScan.ReloadedII",
     "reloaded.sharedlib.hooks",
-    "Reloaded.Memory.SigScan.ReloadedII"
+    "reloaded.universal.fileemulationframework",
+    "reloaded.universal.fileemulationframework.bmd"
   ],
   "OptionalDependencies": [],
   "SupportedAppId": [
     "p5r.exe"
   ],
-  "ProjectUrl": ""
+  "ProjectUrl": "https://github.com/Lightboom9/p5rpc.SkillTableExpanded"
 }
